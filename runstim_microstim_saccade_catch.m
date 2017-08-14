@@ -1,33 +1,40 @@
-function runstim_simphosphene_randint_saccade2(Hnd)
+function runstim_microstim_saccade_catch(Hnd)
 %Written by Xing 17/7/17
-%Present simulated phosphene, monkey has to fixate for 300 ms, followed by
+%On 50% of trials, present simulated phosphene. Monkey has to fixate for 300 ms, followed by
 %an interval lasting anywhere from 0 to 500 ms. A simulated phosphene
 %appears at a location in the bottom right quadrant, and he is allowed to
-%saccade to it immediately.
+%saccade to it immediately. If no saccade made, catch dot is still presented 
+%at 800 ms, but not rewarded. On the other 50% of trials, no simulated
+%phosphene present, and catch dot presented at end of full 800-ms period.
+%No microstim administered.
+%Time allowed to reach target reduced to maximum of 250 ms.
 
 global Par   %global parameters
 global trialNo
 global behavResponse
 global performance
 global recentPerf
-global allTargetLetters
-global distLettersAllTrials
+global blockPerf
 global allSampleSize
 global allSampleX
 global allSampleY
-global allVisualHeightResolution
-global allSample
 global allFixT
 global allStimDur
 global trialsRemaining
 global allTrialCond
 global blockNo
+global allBlockType
 global corrTrialBlockCounter
 global allBlockNo
 global allHitX
 global allHitY
 global allHitRT
-global currentLevel    
+global allCurrentLevel    
+global allMaskTex
+global allElectrodeNum
+global allInstanceNum
+global allArrayNum
+global allTargetArrivalTime
 
 mydir = 'C:\Users\Xing\Lick\saccade_task_logs\';
 fn = input('Enter LOG file name (e.g. 20110413_B1), blank = no file\n','s');
@@ -44,14 +51,10 @@ w=Par.w;
 FixDotSize = 0.2; 
 % global LPStat  %das status values
 Times = Par.Times; %copy timing structure
-distractorOn=1;
-brightOppositeShape=0;
-black=[0 0 0];
 
 %WINDOWS
 %Fix window
 FixWinSz =1.5;%1.5
-TargWinSz = 2;  %CHANGE TO MAKE MORE ACCUARTE
 
 %Fixatie kleur
 red = [255 0 0];
@@ -62,7 +65,7 @@ PREFIXT = 1000; %time to enter fixation window
 
 %REactie tijd
 TARGT = 0; %time to keep fixating after target onset before fix goes green (het liefst 400)
-RACT = 1500;      %reaction time
+RACT = 200;      %reaction time
 
 %Fix location
 Fsz = FixDotSize.*Par.PixPerDeg;
@@ -70,11 +73,11 @@ Fsz = FixDotSize.*Par.PixPerDeg;
 %Target positions (Diagonals)
 % targx = [-150 -150 150 150 -100 -100 100 100 -200 -200 200 200];
 % targy = [-150 150 150 -150 -100 100 100 -100 -200 200 200 -200];
-
+catchDotY=-100;
 
 grey = round([255/2 255/2 255/2]);
 
-LOG.fn = 'runstim_stimphosphenes6';
+LOG.fn = 'runstim_microstim_saccade';
 LOG.BG = grey;
 LOG.Par = Par;
 LOG.Times = Par.Times;
@@ -84,9 +87,20 @@ if isempty(fn)
     logon = 0;
 else
     logon = 1;
-    fn = [mydir,'simphosphenes6_',fn];
+    fn = [mydir,'microstim_saccade_',fn];
     save(fn,'LOG')
 end
+
+% %Create stimulator object
+% stimulator = cerestim96()
+% 
+% my_devices = stimulator.scanForDevices
+% pause(.3)
+% stimulator. selectDevice(0); %the number inside the brackets is the stimulator instance number; numbering starts from 0
+% pause(.5)
+% 
+% %Connect to the stimulator
+% stimulator.connect;
 
 %////YOUR STIMULATION CONTROL LOOP /////////////////////////////////
 Hit = 2;
@@ -113,14 +127,31 @@ while ~Par.ESC
     numLetterConds=10;
     numLuminanceConds=40;
     numConds=numLetterConds*numLuminanceConds;
+    blockLength=10;
     if trialNo==1
         blockNo=1;
         corrTrialBlockCounter=0;%tallies the number of correct trials per block
         shuffleFlag=1;
+        hitRT=NaN;
     end
-    if corrTrialBlockCounter==50
+    if corrTrialBlockCounter>=blockLength
         blockNo=blockNo+1;
         corrTrialBlockCounter=0;%reset counter for correct trials for each block
+        blockPerf=[];
+    end
+    if mod(blockNo,2)==1
+        blockType=1;%visually presented simulated phosphene
+    else
+        blockType=2;%microstimulation block
+    end
+    blockType=1;%no microstim in this paradigm
+    catchTrial=randi(2)-1;
+    if blockType==2
+        if length(blockPerf)>=blockLength&&mean(blockPerf)<0.2%if performance indicates that microstimulation was not detected
+            blockNo=blockNo+1;
+            corrTrialBlockCounter=0;%reset counter for correct trials for each block
+            blockPerf=[];
+        end
     end
     if shuffleFlag==1
         permInd=randperm(size(trialsRemaining,1));
@@ -134,48 +165,25 @@ while ~Par.ESC
         repeatNext=trialsRemaining(1,3);
     end
     allTrialCond(trialNo,:)=trialsRemaining(1,:);%store conditions
+    hitX=NaN;
+    hitY=NaN;
     
     %Assign code for trial identity, using sequence of random numbers
     bits = [0 2 6];
     ch = randi(length(bits),1,8);
     ident = bits(ch);
     TRLMAT(trialNo,:) = ident;
-    %SET UP YOUR STIMULI FOR THIS TRIAL
     
-    FIXT=random('unif',300,800);%1000,2300
+    %SET UP STIMULI FOR THIS TRIAL    
+    if catchTrial==1
+        FIXT=1000;
+    elseif catchTrial==0
+        FIXT=random('unif',300,800);%1000,2300
+    end
     stimDuration=randi([120 150]);
-    if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
-        %just redo with current settings
-    else
-        %randomization of shape        
-        sampleSize = randi([5 10]);%pixels
-        sampleX = randi([40 180]);%location of sample stimulus, in RF quadrant 150 230
-        sampleY = randi([40 180]);
-        finalPixelCoordsAll=[sampleX sampleY]
-        
-        %control window setup
-        WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
-            sampleX,  -sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];   %2: target; 
-        Par.WIN = WIN';
-    end
-    %/////////////////////////////////////////////////////////////////////
-    %START THE TRIAL
-    %set control window positions and dimensions
-    refreshtracker(1) %for your control display
-    SetWindowDas      %for the dascard
-    Abort = false;    %whether subject has aborted before end of trial
     
-    %///////// EVENT 0 START FIXATING//////////////////////////////////////
-    Screen('FillRect',w,grey);
-    Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
-    Screen('Flip', w);
-        
-    if mod(blockNo,2)==1
-        blockType=1;%visually presented simulated phosphene
-    else
-        blockType=2;%microstimulation block
-    end
-%     if blockType==1
+    if blockType==1
+        sampleSize = randi([5 10]);%pixels
         visualWidth=sampleSize;%in pixels
         visualHeight=visualWidth;%in pixels
         
@@ -229,10 +237,153 @@ while ~Par.ESC
             masktex(phospheneInd)=Screen('MakeTexture', w, newPhosphene);
         end
         % Build a single transparency mask texture
-        %masktex=Screen('MakeTexture', w, maskblob);
-%     else
-%         
-%     end
+        %masktex=Screen('MakeTexture', w, maskblob);  
+        electrode=NaN;%no stimulation occurred
+        instance=NaN;
+        amplitude=NaN;
+        array=NaN;
+    elseif blockType==2
+        %select electrode for microstimulation
+%         electrodeInd = 1;
+%         temp=randi(4);%To randomly select one of the channels on a given array
+%         array13chs=[1 2 5 6];
+%         electrodeInd=array13chs(temp);
+        
+%         temp=randi(4);
+%         array1chs=[3 4 9 10];
+%         electrodeInd=array1chs(temp);
+        
+        electrodeInd=randi(7);%randomly select one of the 7 channels
+% 6.08013139448369 -57.5683516819474 64.2938056246091 2.48621643476278 26.5206999998666 11 12 40
+% 55.8767850062012 -71.0350415565651 115.291652293049 4.45828331263410 14.5465563836931 12 12 23
+% 16.2653274701236 -55.3786060950071 94.9056131349569 3.66996311441011 22.2097227018053 12 12 39
+% 41.3215783139404 -76.5363300227501 117.935898439498 4.56053528174669 10.2883544245231 12 12 59
+% 43.8921276022195 -67.5797536766718 90.2963097249265 3.49172314588600 3.09015541764014 13 12 21
+% 12.9473896446797 -71.2883775745738 88.0788761683683 3.40597585347189 9.48521707458857 13 12 41
+% 29.5742455300091 -73.4272655105649 107.264035444527 4.14785849414840 4.06545223931962 16 12 6
+
+        switch electrodeInd
+            case 1
+                electrode=40;
+                RFx=6.1;
+                RFy=-57.6;
+                array=12;
+                instance=6;
+                %SNR 27, impedance 11
+            case 2
+                electrode=23;
+                RFx=55.9;
+                RFy=-71.0;
+                array=12;
+                instance=6;
+                %SNR 15, impedance 12
+            case 3
+                electrode=39;
+                RFx=16.3;
+                RFy=-55.4;
+                array=12;
+                instance=6;
+                %SNR 22, impedance 12
+            case 4
+                electrode=59;
+                RFx=41.3;
+                RFy=-76.5;
+                array=12;
+                instance=6;
+                %SNR 10, impedance 12
+            case 5
+                electrode=21;
+                RFx=12.9;
+                RFy=-71.2;
+                array=12;
+                instance=6;
+                %SNR 3, impedance 13
+            case 6
+                electrode=41;
+                RFx=29.6;
+                RFy=-73.4;
+                array=12;
+                instance=6;
+                %SNR 9, impedance 13
+            case 7
+                electrode=6;
+                RFx=126.2;
+                RFy=-96.3;
+                array=12;
+                instance=6;
+                %SNR 4, impedance 16
+        end
+        
+        % define a waveform
+        waveform_id = 1;
+        amplitude=50;%set current level in uA
+        stimulator.setStimPattern('waveform',waveform_id,...
+            'polarity',0,...
+            'pulses',5,...
+            'amp1',amplitude,...
+            'amp2',amplitude,...
+            'width1',170,...
+            'width2',170,...
+            'interphase',60,...
+            'frequency',200);
+        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
+    end
+    
+    if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
+        %just redo with current settings
+    else
+        %randomization of shape
+        if blockType==1
+            sampleX = randi([40 180]);%location of sample stimulus, in RF quadrant 150 230
+            sampleY = randi([40 180]);
+        elseif blockType==2
+            sampleX = RFx;%location of sample stimulus, in RF quadrant 150 230
+            sampleY = -RFy;
+        end
+        finalPixelCoordsAll=[sampleX sampleY];
+        eccentricity=sqrt(sampleX^2+sampleY^2);
+        if eccentricity<Par.PixPerDeg
+            TargWinSz = 1;
+        elseif eccentricity<2*Par.PixPerDeg
+            TargWinSz = 1.5;
+        elseif eccentricity<3*Par.PixPerDeg
+            TargWinSz = 2;
+        elseif eccentricity<4*Par.PixPerDeg
+            TargWinSz = 2.5;
+        elseif eccentricity<5*Par.PixPerDeg
+            TargWinSz = 3;
+        elseif eccentricity<6*Par.PixPerDeg
+            TargWinSz = 3.5;
+        elseif eccentricity<7*Par.PixPerDeg
+            TargWinSz = 4;
+        end
+        if catchTrial==1
+            TargWinSz = 2;
+        end
+        %control window setup
+        if catchTrial==0
+            WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
+                sampleX,  -sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];   %2: target;
+            Par.WIN = WIN';
+        elseif catchTrial==1
+            WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
+                0,  -catchDotY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];   %2: target;
+            Par.WIN = WIN';
+        end
+    end
+    
+    %/////////////////////////////////////////////////////////////////////
+    %START THE TRIAL
+    %set control window positions and dimensions
+    refreshtracker(1) %for your control display
+    SetWindowDas      %for the dascard
+    Abort = false;    %whether subject has aborted before end of trial
+    
+    %///////// EVENT 0 START FIXATING//////////////////////////////////////
+    Screen('FillRect',w,grey);
+    Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+    Screen('Flip', w);        
+    
     % Bump priority for speed        
 	priorityLevel=MaxPriority(w);
     Priority(priorityLevel);     
@@ -247,11 +398,13 @@ while ~Par.ESC
     %Par.Updatxy = 1; %centering key is enabled
     Time = 1;
     Hit = 0;
-    %prepare simulated phosphene
-    for phospheneInd=1:numSimPhosphenes
-        destRect=[screenWidth/2+finalPixelCoordsAll(phospheneInd,1)-visualWidth/2 screenHeight/2+finalPixelCoordsAll(phospheneInd,2)-visualHeight/2 screenWidth/2+finalPixelCoordsAll(phospheneInd,1)+visualWidth/2 screenHeight/2+finalPixelCoordsAll(phospheneInd,2)+visualHeight/2];
-        Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
-        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
+    %prepare simulated phosphene, if that is not a catch trial
+    if catchTrial==0
+        for phospheneInd=1:numSimPhosphenes
+            destRect=[screenWidth/2+finalPixelCoordsAll(phospheneInd,1)-visualWidth/2 screenHeight/2+finalPixelCoordsAll(phospheneInd,2)-visualHeight/2 screenWidth/2+finalPixelCoordsAll(phospheneInd,1)+visualWidth/2 screenHeight/2+finalPixelCoordsAll(phospheneInd,2)+visualHeight/2];
+            Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
+            Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
+        end
     end
     while Time < PREFIXT && Hit == 0
         dasrun(5)
@@ -267,7 +420,6 @@ while ~Par.ESC
         Time = 1;
         Hit = 0;
         disp(FIXT);
-        stim_on_flag=0;
         while Time < FIXT && Hit== 0
             %Check for 10 ms
             dasrun(5)
@@ -304,18 +456,27 @@ while ~Par.ESC
     
     %///////// EVENT 2 DISPLAY TARGET(S) //////////////////////////////////////
     if Hit == 0 %subject kept fixation, display stimulus
-        
-%         if blockType==1
-            %draw simulated phosphene
-            Screen('Flip', w);
-%         else
-%             %deliver microstimulation
-%             
-%         end
+        if blockType==1
+            if catchTrial==0
+                %draw simulated phosphene
+                Screen('Flip', w);
+            elseif catchTrial==1
+%                 Screen('FillOval',w,[0 0 255],[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot turns blue
+                Screen('FillOval',w,[0 255 0],[Par.HW-Fsz/2 Par.HH-Fsz/2+catchDotY Par.HW+Fsz Par.HH+Fsz+catchDotY]);%green catch dot
+                Screen('Flip', w);
+            end
+        elseif blockType==2
+            %deliver microstimulation
+            stimulator.manualStim(electrode,waveform_id)
+            if length(my_devices>1)
+                %disconnect CereStim
+                stimulator.disconnect;
+            end
+        end
         dasbit(  Par.TargetB, 1);
         tic
                 
-        %///////// EVENT 3 TARGET ONSET, REACTION TIME%%//////////////////////////////////////
+        %///////// EVENT 3 REACTION TIME%%//////////////////////////////////////
         
         if Hit == 0 %subject kept fixation, subject may make an eye movement
                       
@@ -337,8 +498,8 @@ while ~Par.ESC
     end
     %END EVENT 2
     
-    targetIdentity=LPStat(6);%1 is target, 2 onwards is distractor
-    LPStat()
+    targetIdentity=LPStat(6);
+    LPStat();
     dirName=cd;
 %     save([dirName,'\test\',date,'_perf.mat'],'behavResponse','performance')
     
@@ -407,9 +568,9 @@ while ~Par.ESC
             shuffleFlag=0;
         end
         for n=1:length(ident)
-            dasbit(ident(n),1)
+            dasbit(ident(n),1);
             pause(0.05);%add a time buffer between sending of dasbits
-            dasbit(ident(n),0)
+            dasbit(ident(n),0);
             pause(0.05);%add a time buffer between sending of dasbits
         end
     end
@@ -423,16 +584,26 @@ while ~Par.ESC
     allFixT(trialNo)=FIXT;
     allStimDur(trialNo)=stimDuration;
     allBlockNo(trialNo)=blockNo;
+    allBlockType(trialNo)=blockType;
+    allCurrentLevel(trialNo)=amplitude;
+    allMaskTex{trialNo}=newPhosphene;
+    allElectrodeNum{trialNo}=electrode;
+    allInstanceNum{trialNo}=instance;
+    allArrayNum{trialNo}=array;
+    allTargetArrivalTime(trialNo)=Time;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;
         allHitRT(trialNo)=hitRT;
+        blockPerf=[blockPerf 1];%correct saccade made
     else
         allHitX(trialNo)=NaN;
         allHitY(trialNo)=NaN;
         allHitRT(trialNo)=NaN;
+        blockPerf=[blockPerf 0];%target not reached
     end
-%     send_serial_data(trialNo);%send trial number to NSPs via serial port
+    recentPerf=mean(blockPerf)
+    send_serial_data(trialNo);%send trial number to NSPs via serial port
     dirName=cd;
     %///////////////////////INTERTRIAL AND CLEANUP
     
@@ -456,4 +627,7 @@ while ~Par.ESC
         save(fn,'*')
     end
 end   
-
+% if length(my_devices==1)
+%     %disconnect CereStim
+%     stimulator.disconnect;
+% end

@@ -101,7 +101,7 @@ trialNo=0;
 %for subsequent recording seesions, load in trials remaining from previous
 %day:
 % load('C:\Users\Xing\Lick\visual_letter_task_logs\simphosphenes6_20170711_B1.mat','trialsRemaining','trialsRemainingOriginal')
-load('C:\Users\Xing\Lick\code\120717_trialsRemaining.mat','trialsRemaining');
+% load('C:\Users\Xing\Lick\code\120717_trialsRemaining.mat','trialsRemaining');
 trialsRemaining=[9 4 0;9 34 0;4 36 1;7 36 0];
 
 load('C:\Users\Xing\Lick\visual_letter_task_logs\lumList.mat','lumList');%a pre-determined set of luminance values for each phosphene location
