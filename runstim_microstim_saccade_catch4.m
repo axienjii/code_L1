@@ -137,7 +137,7 @@ currentTrialIsRepeat=0;
 questCounterHit=0;%reset counters for both hits and misses
 questCounterMiss=0;
 currentAmplitude=50;
-electrodeInd=1;%start with electrode with the lowest impedance on first trial
+electrodeInd=6;%start with electrode with the lowest impedance on first trial
 % Provide our prior knowledge to QuestCreate, and receive the data struct "q".
 tGuess=50;%guess threshold value
 tGuessSd=30;%guess SD
@@ -155,7 +155,7 @@ trialsDesired=40;
 wrongRight={'wrong','right'};
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
-while ~Par.ESC%&&staircaseFinishedFlag==0
+while ~Par.ESC&&staircaseFinishedFlag==0
     %Pretrial
     trialNo = trialNo+1;
     if isempty(trialsRemaining)
@@ -285,7 +285,7 @@ while ~Par.ESC%&&staircaseFinishedFlag==0
         %select microstimulation current amplitude, using Quest procedure
 %         tTest=QuestQuantile(q);	% Recommended by Pelli (1987), and still our favorite.
 %         currentAmplitude=tTest
-        maxCurrent=80;
+        maxCurrent=70;
         if currentAmplitude>maxCurrent
             currentAmplitude=maxCurrent;%upper limit of 70 uA
         end
@@ -302,11 +302,11 @@ while ~Par.ESC%&&staircaseFinishedFlag==0
         end
         switch array
             case 10
-                maxElectrodes=10;
+                maxElectrodes=1;
             case 12
                 maxElectrodes=29;
             case 13
-                maxElectrodes=16;
+                maxElectrodes=10;
         end
         if electrodeInd>maxElectrodes
             arrayFinished=1;
@@ -322,10 +322,11 @@ while ~Par.ESC%&&staircaseFinishedFlag==0
         
         % define a waveform
         waveform_id = 1;
+        numPulses=10;%originally set to 5 pulses
 %         amplitude=50;%set current level in uA
         stimulator.setStimPattern('waveform',waveform_id,...
             'polarity',0,...
-            'pulses',5,...
+            'pulses',numPulses,...
             'amp1',currentAmplitude,...
             'amp2',currentAmplitude,...
             'width1',170,...
@@ -683,8 +684,8 @@ while ~Par.ESC%&&staircaseFinishedFlag==0
     if trialNo > 0
         save(fn,'*')
     end
-    minNumReversals=10;
-    if sum(logical(diff(allStaircaseResponse)))>=minNumReversals||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are 20 reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
+    minNumReversals=40;
+    if sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
         %After enough reversals have been carried out:
         % Ask Quest for the final estimate of threshold.
 %         t=QuestMean(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
