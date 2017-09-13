@@ -8,7 +8,7 @@ function runstim_microstim_saccade_catch4(Hnd)
 %saccade to it immediately. If no saccade made, catch dot is still presented 
 %at 800 ms, but not rewarded. On the other 50% of trials, microstim administered, 
 %and monkey required to make a saccade to RF location. Catch dot presented
-%at end of full 800-ms period, rewarded 50% of the time.
+%at end of 1000-ms period if correct saccade not made to target, rewarded 100% of the time.
 %Time allowed to reach target reduced to maximum of 200 ms.
 
 global Par   %global parameters

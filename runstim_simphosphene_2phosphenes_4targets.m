@@ -1,4 +1,4 @@
-function runstim_simphosphene_2phosphenes_2targets(Hnd)
+function runstim_simphosphene_2phosphenes_4targets(Hnd)
 %Written by Xing for training Lick 9/9/16
 %Present two simulated phosphenes, task is to report their relative positions.
 %Use PsychToolBox to generate stimuli, instead of Cogent.
@@ -85,7 +85,7 @@ while ~Par.ESC
             shape=1;
         end
         
-        sampleSize = randi([30 80]);%pixels
+        sampleSize = randi([40 120]);%pixels
         sampleX = randi([40 100]);%location of sample stimulus, in RF quadrant 150 230
         sampleY = randi([40 100]);
         
@@ -244,15 +244,17 @@ while ~Par.ESC
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
             if Time>floor(FIXT/2)&&stim_on_flag==0
                 % Draw image for current frame:
-              
-                %draw two simulated phosphenes simultaneously (later, vary
-                %timing, duration, frequency)
-                for phospheneInd=1:numSimPhosphenes
-                    destRect=[screenWidth/2+sampleX+finalPixelCoords(phospheneInd,1)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoords(phospheneInd,2)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+sampleX+finalPixelCoords(phospheneInd,1)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoords(phospheneInd,2)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
-                    Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
-                    Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
-                end
-                Screen('Flip', w);
+%                 phospheneTrial=randi(4)
+%                 if phospheneTrial<4
+                    %draw two simulated phosphenes simultaneously (later, vary
+                    %timing, duration, frequency)
+                    for phospheneInd=1:numSimPhosphenes
+                        destRect=[screenWidth/2+sampleX+finalPixelCoords(phospheneInd,1)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoords(phospheneInd,2)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+sampleX+finalPixelCoords(phospheneInd,1)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoords(phospheneInd,2)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
+                        Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
+                        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
+                    end
+                    Screen('Flip', w);
+%                 end
                 pause(stimDuration/1000);%0.01
                 stim_on_flag=1;
                 Screen('FillRect',w,grey);
@@ -301,19 +303,29 @@ while ~Par.ESC
             
             %Draw targets
             targetSize=10;%in pixels
-            lightDistractors=0;
+            lightDistractors=1;
             displacementFactor=[-1 1 -1 1;-1 1 1 -1;0 0 -1 1;-1 1 0 0];%4 targets
-            for i=1:4
+            distcol=80;
+            for i=1:4%targetLocation
                 targcol=black;
-                 if lightDistractors==1
-                     if (targetLocation==1||targetLocation==2)&&(i==1||i==2)||(targetLocation==3||targetLocation==4)&&(i==3||i==4)
-                     else
-                         targcol=[20 20 20];
-                     end
-                 end
-                 Screen('FillOval',w,targcol,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,3) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,3)]);
-                 Screen('FillOval',w,targcol,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,4) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,4)]);
+                if lightDistractors==1
+                    if i==1||i==2
+                        if targetLocation==3||targetLocation==4
+                            targcol=[distcol distcol distcol];
+                        end
+                    end
+                    if i==3||i==4
+                        if targetLocation==1||targetLocation==2
+                            targcol=[distcol distcol distcol];
+                        end
+                    end
+                end
+                Screen('FillOval',w,targcol,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,3) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,3)]);
+                Screen('FillOval',w,targcol,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,4) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,4)]);
             end
+%             Screen('FillOval',w,targcol,[screenWidth/2-targetSize+targetArrayX(targetLocation)+targetSize*displacementFactor(targetLocation,1) screenHeight/2-targetSize+targetArrayX(targetLocation)+targetSize*displacementFactor(targetLocation,3) screenWidth/2+targetArrayY(targetLocation)+targetSize*displacementFactor(targetLocation,1) screenHeight/2+targetArrayY(targetLocation)+targetSize*displacementFactor(targetLocation,3)]);
+%             Screen('FillOval',w,targcol,[screenWidth/2-targetSize+targetArrayX(targetLocation)+targetSize*displacementFactor(targetLocation,2) screenHeight/2-targetSize+targetArrayX(targetLocation)+targetSize*displacementFactor(targetLocation,4) screenWidth/2+targetArrayY(targetLocation)+targetSize*displacementFactor(targetLocation,2) screenHeight/2+targetArrayY(targetLocation)+targetSize*displacementFactor(targetLocation,4)]);
+            
             Screen('Flip', w);
             
             dasbit(Par.TargetB, 1);
@@ -364,7 +376,7 @@ while ~Par.ESC
         performance(trialNo)=-1;%error
     end
     dirName=cd;
-    save([dirName,'\test\',date,'_2phos_4targperf.mat'],'behavResponse','performance')
+    save([dirName,'\',date,'_2phos_4targperf.mat'],'behavResponse','performance')
     
     %///////// POSTTRIAL AND REWARD //////////////////////////////////////
     if Hit ~= 0 && ~Abort %has entered a target window (false or correct)
