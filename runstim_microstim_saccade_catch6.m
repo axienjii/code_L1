@@ -351,7 +351,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             end
         end
         dasbit(  Par.TargetB, 1);
-        tic
         
         %///////// EVENT 3 REACTION TIME%%//////////////////////////////////////
         

@@ -1,15 +1,23 @@
-function runstim_microstim_saccade_catch12(Hnd)
-%Written by Xing 11/9/17
-%Based on previously measured current threshold values, deliver bipolar
-%microstimulation to electrodes and record saccade end points.
-%On 50% of trials, deliver microstimulation (10 pulses). Monkey has to fixate for 300 ms, followed by
+function runstim_microstim_saccade_catch13(Hnd)
+%Written by Xing 15/9/17
+%Deliver either monopolar or bipolar microstimulation to electrodes and
+%record saccade end points. Set 'bipolar' variable to either 0 or 1 for
+%monopolar or bipolar stimulation respectively.
+%On some percentage of trials, deliver microstimulation (50 pulses). Monkey has to fixate for 300 ms, followed by
 %an interval lasting anywhere from 0 to 400 ms. Monkey is required to make
 %a saccade to RF location, and if correct saccade made, then at 100 ms, fix
-%spot changes colour and reward given. On the other 50% of trials, no microstim
+%spot changes colour and reward given. On the other proportion of trials (catch trials), no microstim
 %administered, and monkey is rewarded for maintaining fixation after 1000 ms.
 %Time allowed to reach target reduced to maximum of 200 ms.
-%This version should have equal timing between stimulation and catch
-%trials, unlike catch10 where mictostim trials lasted 100 ms longer.
+%This version should have equal timing of 'target on' encode, between
+%monopolar and bipolar stimulation. Previous codes, catch11 (monopolar) and
+%catch 12 (bipolar), used stimulator.manual and stimulator.play
+%respectively. stimulator.manual resulted in 166-ms delay between start of
+%stimulation train and encode, while stimulator.play had almost no delay
+%between start of stimulation train and encode.
+%The present code, catch 12, uses stimulator.play. Additionally, the sync
+%pulses are sent from the CereStim Sync Pulse output via BNC cables to the
+%analog inputs on instance 1.
 
 global Par   %global parameters
 global trialNo
@@ -50,6 +58,7 @@ global missesAtMaxCurrent
 global condInd
 global chOrder
 global allChOrder
+global allMonoOrBipolar
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
@@ -142,9 +151,11 @@ allHitRT=[];
 allChOrder=[];
 RFx=NaN;
 RFy=NaN;
+allMonoOrBipolar=[];
 
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
+bipolar=0;%set to 0 for monopolar stimulation, set to 1 for bipolar stimulation
 
 load('C:\Users\Xing\Lick\currentThresholdChs.mat');
 chOrder=originalChOrder;
@@ -201,6 +212,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         electrodeInd=goodInds(chOrder(condInd));%channel number
         arrayInd=find(arrays==array);
         desiredStimulator=stimulatorNums(arrayInd);
+        desiredStimulator=14305;
         falseAlarm=NaN;
                 
         instance=ceil(array/2);
@@ -211,29 +223,34 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         RFx=goodArrays8to16(chOrder(condInd),1);
         RFy=goodArrays8to16(chOrder(condInd),2);
         
-        %select second electrode:
-        returnElectrodeIsMin=0;%set to 1 to select adjacent electrode with lowest-impedance as return electrode. set to 0 to select highest-impedance adjacent electrode as return electrode 
-        arrayElectrodes=1:64;
-        arrayElectrodes=reshape(arrayElectrodes,[8 8]);%1 to 8 in first column, 2 to 16 in second, etc
-        arrayElectrodesPadded=zeros(10);
-        arrayElectrodesPadded(2:9,2:9)=arrayElectrodes;%grid of 1 to 64, padded by zeros
-        [rowInd colInd]=find(arrayElectrodes==electrode);
-        squareElectrodes=arrayElectrodesPadded(rowInd:rowInd+2,colInd:colInd+2);%channel numbers in the 3x3 square, centred on the electrode of interest
-        adjElectrodes=squareElectrodes(squareElectrodes~=0);
-        adjElectrodes=adjElectrodes(find(adjElectrodes~=electrode));
-        %look up and compile impedance values for adjacent electrodes:
-        adjElectrodesInds=find(ismember(arrayRFs(:,8),adjElectrodes));%indices out of 64 electrodes
-        adjElectrodesImp=arrayRFs(adjElectrodesInds,6);
-        [minImpedance minInd]=min(adjElectrodesImp);
-        [maxImpedance maxInd]=max(adjElectrodesImp);
-        if returnElectrodeIsMin==1
-            electrode2=adjElectrodes(minInd);
-            electrodeInd2=minInd;
-        elseif returnElectrodeIsMin==0
-            electrode2=adjElectrodes(maxInd);
-            electrodeInd2=maxInd;
+        if bipolar==1
+            %select second electrode:
+            returnElectrodeIsMin=0;%set to 1 to select adjacent electrode with lowest-impedance as return electrode. set to 0 to select highest-impedance adjacent electrode as return electrode
+            arrayElectrodes=1:64;
+            arrayElectrodes=reshape(arrayElectrodes,[8 8]);%1 to 8 in first column, 2 to 16 in second, etc
+            arrayElectrodesPadded=zeros(10);
+            arrayElectrodesPadded(2:9,2:9)=arrayElectrodes;%grid of 1 to 64, padded by zeros
+            [rowInd colInd]=find(arrayElectrodes==electrode);
+            squareElectrodes=arrayElectrodesPadded(rowInd:rowInd+2,colInd:colInd+2);%channel numbers in the 3x3 square, centred on the electrode of interest
+            adjElectrodes=squareElectrodes(squareElectrodes~=0);
+            adjElectrodes=adjElectrodes(find(adjElectrodes~=electrode));
+            %look up and compile impedance values for adjacent electrodes:
+            adjElectrodesInds=find(ismember(arrayRFs(:,8),adjElectrodes));%indices out of 64 electrodes
+            adjElectrodesImp=arrayRFs(adjElectrodesInds,6);
+            [minImpedance minInd]=min(adjElectrodesImp);
+            [maxImpedance maxInd]=max(adjElectrodesImp);
+            if returnElectrodeIsMin==1
+                electrode2=adjElectrodes(minInd);
+                electrodeInd2=minInd;
+            elseif returnElectrodeIsMin==0
+                electrode2=adjElectrodes(maxInd);
+                electrodeInd2=maxInd;
+            end
+            sprintf('array %d, return electrode %d, return electrode ind %d',array,electrode2,electrodeInd2)
+        else
+            electrode2=NaN;
         end
-        sprintf('array %d, return electrode %d, return electrode ind %d',array,electrode2,electrodeInd2)
+        
         % define a waveform
         waveform_id = 1;
         numPulses=50;%originally set to 5 pulses
@@ -360,7 +377,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             %deliver bipolar microstimulation
             stimulator.beginSequence;
             stimulator.autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
-            stimulator.autoStim(electrode2,waveform_id_Return) %Electrode #2 , Waveform #2
+            if bipolar==1
+                stimulator.autoStim(electrode2,waveform_id_Return) %Electrode #2 , Waveform #2
+            end
             stimulator.endSequence;
             stimulator.play(1)
             dasbit(  Par.TargetB, 1);
@@ -505,6 +524,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allTargetArrivalTime(trialNo)=Time;
     allFalseAlarms(trialNo)=falseAlarm;
     allChOrder=chOrder(condInd);
+    allMonoOrBipolar(trialNo)=bipolar;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;

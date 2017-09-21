@@ -321,7 +321,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             stimulator.manualStim(electrode,waveform_id)
             dasbit(  Par.TargetB, 1);
         end
-        tic
         
         %///////// EVENT 3 REACTION TIME%%//////////////////////////////////////
         

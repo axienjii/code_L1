@@ -95,12 +95,12 @@ while ~Par.ESC
         targetLocations='LRTB';
         %set target & distractor locations
         targetLocation=randi([1 4],1);%select target location
-        if repeat==1
-            if ~isempty(repeatTargetLocation)
-                targetLocation=repeatTargetLocation;
-            end
-            repeat=0;
-        end
+%         if repeat==1
+%             if ~isempty(repeatTargetLocation)
+%                 targetLocation=repeatTargetLocation;
+%             end
+%             repeat=0;
+%         end
         stimInd=1:length(targetArrayX);
         distInd=stimInd(stimInd~=targetLocation);
         distLocations=targetLocations(stimInd~=targetLocation);
@@ -155,8 +155,8 @@ while ~Par.ESC
     end
         
     %randomly set sizes of 'phosphenes'
-    maxDiameter=12;%pixels
-    minDiameter=5;%pixels
+    maxDiameter=15;%pixels
+    minDiameter=10;%pixels
     diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
     diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
     %factor in scaling of RF sizes across cortex:
@@ -234,15 +234,15 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        FIXT=random('unif',800,1500);%1000,2300
+        FIXT=random('unif',300,650);%1000,2300
         disp(FIXT);
         stim_on_flag=0;
-        stimDuration=randi([200 400]);%ms
+        stimDuration=randi([120 160]);%ms
         while Time < FIXT && Hit== 0
             %Check for 10 ms
             dasrun(5)
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
-            if Time>floor(FIXT/2)&&stim_on_flag==0
+            if Time>FIXT-stimDuration&&stim_on_flag==0
                 % Draw image for current frame:
 %                 phospheneTrial=randi(4)
 %                 if phospheneTrial<4
@@ -255,13 +255,12 @@ while ~Par.ESC
                     end
                     Screen('Flip', w);
 %                 end
-                pause(stimDuration/1000);%0.01
                 stim_on_flag=1;
-                Screen('FillRect',w,grey);
-                Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
-                Screen('Flip', w);
             end
         end
+        Screen('FillRect',w,grey);
+        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+        Screen('Flip', w);
     else
         Hit = -1; %the subject did not fixate
     end
@@ -305,7 +304,7 @@ while ~Par.ESC
             targetSize=10;%in pixels
             lightDistractors=1;
             displacementFactor=[-1 1 -1 1;-1 1 1 -1;0 0 -1 1;-1 1 0 0];%4 targets
-            distcol=80;
+            distcol=0;
             for i=1:4%targetLocation
                 targcol=black;
                 if lightDistractors==1
@@ -423,7 +422,7 @@ while ~Par.ESC
             repeat=1;
             repeatTargetLocation=targetLocation;
         end
-        if length(lastTrials)>6
+        if length(lastTrials)>30
             lastTrials=lastTrials(end-5:end);
         end
         if length(perfR)>10
@@ -465,6 +464,7 @@ while ~Par.ESC
     SCNT = {'TRIALS'};
     SCNT(2) = { ['N: ' num2str(Par.Trlcount) ]};
     SCNT(3) = { ['C: ' num2str(Par.Corrcount) ] };
+%     SCNT(4) = { ['P: ' num2str(recentPerf) ] };
     SCNT(4) = { ['E: ' num2str(Par.Errcount) ] };
     set(Hnd(1), 'String', SCNT ) %display updated numbers in GUI
     
