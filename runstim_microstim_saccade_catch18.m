@@ -61,6 +61,9 @@ global condInd
 global chOrder
 global allChOrder
 global allMultiCereStim
+global recentPerf
+global lastTrials
+global allTrialType
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
@@ -96,7 +99,7 @@ PREFIXT = 1000; %time to enter fixation window
 
 %REactie tijd
 TARGT = 0; %time to keep fixating after target onset before fix goes green (het liefst 400)
-RACT = 2500;      %reaction time 250 ms %adjust
+RACT = 250;      %reaction time 250 ms %adjust
 
 Fsz = FixDotSize.*Par.PixPerDeg;
 rewDotSize=0.4.*Par.PixPerDeg;
@@ -158,6 +161,7 @@ RFy=NaN;
 RFx2=NaN;
 RFy2=NaN;
 allMultiCereStim=[];
+allTrialType=[];
 
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
@@ -191,28 +195,31 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %SET UP STIMULI FOR THIS TRIAL
     catchDotTime=1000;%time before catch dot is presented
     stimDuration=randi([120 150]);
-    catchTrialRand=randi(2);%50% of trials are visual trials %delete this line
-%     catchTrialRand=2;%1: visual trials; 2: microstim trials
-    if catchTrialRand<=1
-        catchTrial=1;
-    elseif catchTrialRand>1
-        catchTrial=0;
+    visualTrialRand=randi(2);%50% of trials are visual trials %delete this line
+%     visualTrialRand=1;%1: visual trials; 2: microstim trials
+    if visualTrialRand<=1
+        visualTrial=1;
+    elseif visualTrialRand>1
+        visualTrial=0;
     end
-    if catchTrial==1
+    if visualTrial==1
         currentAmplitude=0;
+        currentAmplitude2=0;
         electrode=NaN;
         electrode2=NaN;
         instance=NaN;
+        instance2=NaN;
         array=NaN;
+        array2=NaN;
         falseAlarm=0;
-    elseif catchTrial==0
+    elseif visualTrial==0
         % define a waveform
         waveform_id = 1;
         numPulses=1;%originally set to 5 pulses
         %         amplitude=50;%set current level in uA
     end
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
-    
+    FIXT=300;
     setElectrodes=[50 55 32 57;10 24 63 42];%first row: set 1, LRTB; second row: set 2, LRTB
     setArrays=[13 11 13 10;12 11 15 10];
     setInd=2;
@@ -226,7 +233,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %     end
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
     LRorTB=randi(2);%2 targets, 1: left and right; 2: top and bottom
-%     LRorTB=2;
+    LRorTB=2;
     targetLocation=randi([1 2],1);%select target location
 %     targetLocation=2;
     twoPairs=1;
@@ -304,6 +311,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     falseAlarm=NaN;
     
     instance=ceil(array/2);
+    instance2=ceil(array2/2);
     load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat']);
     eval(['arrayRFs=array',num2str(array),';']);
     %         electrode=goodArrays8to16(chOrder(condInd),8);%channel number
@@ -314,7 +322,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     
     visRFx=[RFx RFx2];%locations of visual stimuli
     visRFy=[RFy RFy2];
-    if catchTrial==1%visual trial
+    if visualTrial==1%visual trial
         finalPixelCoords=[RFx -RFy;RFx2 -RFy2];
         numSimPhosphenes=2;
         jitterLocation=0;
@@ -372,7 +380,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             newPhosphene(:,:,4)=maskblob;
             masktex(phospheneInd)=Screen('MakeTexture', w, newPhosphene);
         end
-    elseif catchTrial==0
+    elseif visualTrial==0
         currentAmplitude=goodCurrentThresholds(electrodeInd)*1.5;
         if currentAmplitude>210
             currentAmplitude=210;
@@ -468,7 +476,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             %Check for 10 ms
             dasrun(5)
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
-            if catchTrial==0
+            if visualTrial==0
                 if scanFlag==1%scan for devices immediately
                     my_devices = stimulator.scanForDevices;
                     scanFlag=0;
@@ -563,16 +571,18 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                     stimulator2.trigger(1);
                     stimFlag=0;
                 end
-            end
-            if Time>=FIXT-25&&prepStimFlag==1%send the first 'pre-trigger' signal
-                dasbit(Par.MicroB,0);
-                pause(0.1);
-                dasbit(Par.MicroB,1);
-                pause(0.1);
-                prepStimFlag=0;
+                if Time>=FIXT-35&&prepStimFlag==1%send the first 'pre-trigger' signal
+                    dasbit(Par.MicroB,0);
+                    pause(0.1);
+                    dasbit(Par.MicroB,1);
+                    pause(0.1);
+                    dasbit(Par.MicroB,0);%send the first half of the second, 'real trigger' signal
+                    pause(0.1);
+                    prepStimFlag=0;
+                end
             end
         end
-        if catchTrial==1&&Hit==1%catch trial
+        if visualTrial==1&&Hit==1%catch trial
             falseAlarm=1;
         end
     else
@@ -583,7 +593,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %///////// EVENT 2 DISPLAY TARGET(S)
     %//////////////////////////////////////
     if Hit == 0 %subject kept fixation, display stimulus
-        if catchTrial==1%visual trial
+        if visualTrial==1%visual trial
             %draw two simulated phosphenes simultaneously (later, vary
             %timing, duration, frequency)
             for phospheneInd=1:numSimPhosphenes
@@ -592,16 +602,14 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
             end
             Screen('Flip', w);
-            pause(0.2);%0.01
+            pause(0.1);%to match with delay imposed by dasbit during microstim trials
             Screen('FillRect',w,grey);
             Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
             Screen('Flip', w);
-        elseif catchTrial==0
+        elseif visualTrial==0
 %             Screen('FillRect',w,red);
 %             Screen('Flip', w);
-            dasbit(Par.MicroB,0);%send the second, 'real trigger' signal
-            pause(0.1);
-            dasbit(Par.MicroB,1);
+            dasbit(Par.MicroB,1);%send the second half of the second, 'real trigger' signal
             pause(0.1);
             sprintf('array %d, electrode %d, electrode ind %d',array,electrode,electrodeInd)
             sprintf('array %d, electrode %d, electrode ind %d',array2,electrode2,electrodeInd2)
@@ -648,7 +656,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             dasbit(Par.TargetB, 1);
             dasreset(2); %check target window enter
             refreshtracker(3) %set fix point to green
-            if catchTrial==1%catch trial
+            if visualTrial==1%catch trial
                 Time = 0;
                 Hit = 0;
                 while Time < RACT && Hit <= 0  %if no saccade made to RF, keep waiting till catch dot is presented
@@ -658,7 +666,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 end                
                 Screen('FillOval',w,[0 255 0],[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
                 Screen('Flip', w);
-            elseif catchTrial==0             
+            elseif visualTrial==0             
                 Time = 0;
                 while Time < RACT && Hit <= 0  %RACT = time to respond to microstim (reaction time)
                     %Check for 5 ms
@@ -689,7 +697,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     %END EVENT 2
 %     dasbit(Par.TargetB, 1);
-    if catchTrial==0   
+    if visualTrial==0   
         temp=stimulator.isConnected;
         if temp
             stimulator.disableTrigger;
@@ -702,8 +710,14 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     
     targetIdentity=LPStat(6);
     LPStat();
+    if targetIdentity==1%if correct target selected
+        behavResponse(trialNo)=targetLocation;
+    elseif targetIdentity>1%if erroneous target selected
+        distractorRow=targetIdentity-1;%row of selected distractor, out of all distractors
+        behavResponse(trialNo)=distLocations(distractorRow);%incorrect target to which saccade was made (L: left; R: right; T: top; B: bottom)
+    end
     dirName=cd;
-    %     save([dirName,'\test\',date,'_perf.mat'],'behavResponse','performance')
+    save([dirName,'\',date,'_2phos_4targperf.mat'],'behavResponse','performance')
     
     %///////// POSTTRIAL AND REWARD //////////////////////////////////////
     if Hit ~= 0 && ~Abort %has entered a target window (false or correct)
@@ -725,23 +739,33 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             hitX=LPStat(3);%hit x position
             hitY=LPStat(4);%hit y position
             hitRT=LPStat(5);%RT
-            if catchTrial==1%visual trial 
+            if visualTrial==1%visual trial 
                 fprintf('Trial %3d (visual) is correct\n',trialNo);
                 visualCorrect=visualCorrect+1;
-            elseif catchTrial==0
+            elseif visualTrial==0
                 fprintf('Trial %3d (microstim) at %5.2f uA is correct\n',trialNo,currentAmplitude);
                 microstimCorrect=microstimCorrect+1;
                 numHitsElectrode=numHitsElectrode+1;%counter for a given electrode
                 condInd=condInd+1;
             end
+            if Par.Trlcount==1
+                lastTrials=1;
+            else
+                lastTrials=[lastTrials 1];
+            end
         elseif Hit == 1
-            if catchTrial==1%visual trial 
+            if visualTrial==1%visual trial 
                 fprintf('Trial %3d (visual) is incorrect\n',trialNo);
                 visualIncorrect=visualIncorrect+1;
-            elseif catchTrial==0%miss trial
-                dasbit(Par.ErrorB, 1);
-                Par.Errcount = Par.Errcount + 1;
-                performance(trialNo)=-1;%error
+            if Par.Trlcount==1
+                lastTrials=0;
+            else
+                lastTrials=[lastTrials 0];
+            end
+            performance(trialNo)=-1;%error
+            dasbit(Par.ErrorB, 1);
+            Par.Errcount = Par.Errcount + 1;
+            elseif visualTrial==0%incorrect trial
                 fprintf('Trial %3d (microstim) at %5.2f uA is incorrect\n',trialNo,currentAmplitude);
                 microstimIncorrect=microstimIncorrect+1;
                 numMissesElectrode=numMissesElectrode+1;%counter for a given electrode
@@ -753,12 +777,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
         dasbit(Par.MicroB,0)
         dasbit(Par.TargetB, 0);
-        for n=1:length(ident)
-            dasbit(ident(n),1);
-            pause(0.05);%add a time buffer between sending of dasbits
-            dasbit(ident(n),0);
-            pause(0.05);%add a time buffer between sending of dasbits
-        end
+%         for n=1:length(ident)
+%             dasbit(ident(n),1);
+%             pause(0.05);%add a time buffer between sending of dasbits
+%             dasbit(ident(n),0);
+%             pause(0.05);%add a time buffer between sending of dasbits
+%         end
     end
     if falseAlarm==1
         catchFalseAlarms=catchFalseAlarms+1;
@@ -779,6 +803,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allElectrodeNum{trialNo}=electrode;
     allElectrodeNum2{trialNo}=electrode2;
     allInstanceNum{trialNo}=instance;
+    allInstanceNum2{trialNo}=instance2;
     allArrayNum{trialNo}=array;
     allArrayNum2{trialNo}=array2;
     allTargetArrivalTime(trialNo)=Time;
@@ -786,6 +811,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allChOrder=chOrder(condInd);
     allMultiCereStim(trialNo)=multiCereStim;
     allSetInd(trialNo)=setInd;
+    allTrialType(trialNo)=visualTrial;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;
@@ -804,7 +830,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         dasbit(  i, 0);
     end
     dasclearword();
-    if catchTrial==0
+    if visualTrial==0
         %disconnect CereStim
         if exist('my_devices','var')
             if length(my_devices)>1
@@ -815,16 +841,18 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
     end
     
+    if length(lastTrials)>30
+        lastTrials=lastTrials(2:end);
+    end
+    recentPerf=mean(lastTrials);
     SCNT = {'TRIALS'};
-    %     SCNT(2) = { ['N: ' num2str(Par.Trlcount) ]};
-    %     SCNT(3) = { ['C: ' num2str(Par.Corrcount) ] };
-    %     SCNT(4) = { ['E: ' num2str(Par.Errcount) ] };
-    SCNT(2) = { ['N: ' num2str(visHit+microstimHit+microstimMiss) ]};
-    %     SCNT(3) = { ['Hit: ' num2str(microstimHit) ] };
-    %     SCNT(4) = { ['Miss: ' num2str(microstimMiss) ] };
-    SCNT(3) = { ['Hit: ' num2str(numHitsElectrode) ] };
-    SCNT(4) = { ['Miss: ' num2str(numMissesElectrode) ] };
-    SCNT(5) = { ['Electrode: ' num2str(electrode) ] };
+    SCNT(2) = { ['N: ' num2str(Par.Trlcount) ]};
+    SCNT(3) = { ['C: ' num2str(Par.Corrcount) ] };
+    SCNT(4) = { ['P: ' num2str(recentPerf) ] };
+%     SCNT(2) = { ['N: ' num2str(visHit+microstimHit+microstimMiss) ]};
+%     SCNT(3) = { ['Hit: ' num2str(numHitsElectrode) ] };
+%     SCNT(4) = { ['Miss: ' num2str(numMissesElectrode) ] };
+%     SCNT(5) = { ['Electrode: ' num2str(electrode) ] };
     set(Hnd(1), 'String', SCNT ) %display updated numbers in GUI
     
     % Blank screen
