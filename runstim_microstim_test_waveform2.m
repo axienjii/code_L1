@@ -149,7 +149,8 @@ load('C:\Users\Xing\Lick\currentThresholdChs.mat');
 chOrder=originalChOrder;
 condInd=1;
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
-bipolar=1;
+bipolar=0;
+temporalOffset=0;
 
 %Create stimulator object
 stimulator = cerestim96();
@@ -168,12 +169,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     electrodeInd=goodInds(chOrder(condInd));%channel number
     arrayInd=find(arrays==array);
     desiredStimulator=stimulatorNums(arrayInd);
-    desiredStimulator=14295;
+    desiredStimulator=14293;
     
     % define a waveform
     waveform_id = 1;
     numPulses=50;%originally set to 5 pulses
-    numPulses=20;%originally set to 5 pulses
+    numPulses=10;%originally set to 5 pulses
     %         amplitude=50;%set current level in uA
     
     %/////////////////////////////////////////////////////////////////////
@@ -194,8 +195,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     
     currentAmplitude=100;
     currentAmplitude2=100;
-    electrode=33;
-    electrode2=34;
+    electrode=12;
+    electrode2=3;
     
     my_devices = stimulator.scanForDevices;
     pause(0.5)
@@ -233,7 +234,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         stimulator.beginGroup;
     end
     stimulator.autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
-    if bipolar==1
+    if bipolar==1                        
         stimulator.autoStim(electrode2,waveform_id_Return) %Electrode #2 , Waveform #2
         stimulator.endGroup;
     end
@@ -247,6 +248,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         Screen('FillRect',w,grey);
         Screen('Flip', w);
         pause(0.2)
+        dasbit(6,1);
+        pause(0.1);
+        dasbit(6,0);
+        pause(0.1);
     end
 end
 

@@ -1,7 +1,9 @@
-function runstim_microstim_saccade_catch6(Hnd)
-%Written by Xing 15/8/17
-%Determine microstimulation thresholds for electrodes on which monkey
-%reliably reports phosphene percept.
+function runstim_microstim_saccade_catch10_checks(Hnd)
+%Written by Xing 27/9/17
+%Carries out checks for a small selection of electrodes, instead of the
+%full 201.
+%Based on previously measured current threshold values, deliver
+%microstimulation to electrodes and record saccade end points.
 %On 50% of trials, deliver microstimulation (10 pulses). Monkey has to fixate for 300 ms, followed by
 %an interval lasting anywhere from 0 to 400 ms. Monkey is required to make
 %a saccade to RF location, and if correct saccade made, then at 100 ms, fix
@@ -44,10 +46,13 @@ global missCounter
 global currentInd
 global allStaircaseResponse
 global missesAtMaxCurrent
+global condInd
+global chOrder
+global allChOrder
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
-oldLevel = Screen('Preference', 'Verbosity',0);
+Screen('Preference', 'Verbosity',0);
 mydir = 'C:\Users\Xing\Lick\saccade_task_logs\';
 fn = input('Enter LOG file name (e.g. 20110413_B1), blank = no file\n','s');
 %Copy the run_stim script
@@ -104,17 +109,6 @@ else
     save(fn,'LOG');
 end
 
-%Create stimulator object
-stimulator = cerestim96()
-
-my_devices = stimulator.scanForDevices
-pause(.3)
-stimulator. selectDevice(0); %the number inside the brackets is the stimulator instance number; numbering starts from 0
-pause(.5)
-
-%Connect to the stimulator
-stimulator.connect;
-
 %////YOUR STIMULATION CONTROL LOOP /////////////////////////////////
 Hit = 2;
 Par.ESC = false; %escape has not been pressed
@@ -144,17 +138,21 @@ allFalseAlarms=[];
 allHitX=[];
 allHitY=[];
 allHitRT=[];
+allChOrder=[];
+RFx=NaN;
+RFy=NaN;
 
-load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
-originalFinalCurrentVals=finalCurrentVals;
-% currentInd=length(finalCurrentVals);%start with the highest current at beginning of staircase procedure
-currentInd=find(finalCurrentVals<=150);
-currentInd=currentInd(end);
-% On each trial we ask Quest to recommend an intensity and we call QuestUpdate to save the result in q.
+arrays=8:16;
+stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
+
+load('C:\Users\Xing\Lick\currentThresholdChs2.mat');
+% chOrder=originalChOrder;
+condInd=1;
 trialsDesired=40;
-wrongRight={'wrong','right'};
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
+%Create stimulator object
+stimulator = cerestim96();
 while ~Par.ESC&&staircaseFinishedFlag==0
     %Pretrial
     trialNo = trialNo+1;
@@ -175,80 +173,42 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %SET UP STIMULI FOR THIS TRIAL
     catchDotTime=1000;%time before catch dot is presented
     stimDuration=randi([120 150]);
-    tempTrialType=randi(4)-1;
-    if tempTrialType<3
-        catchTrial=0;%0 or 1. Randomly determined on each trial
-    else
-        catchTrial=1;%0 or 1. Randomly determined on each trial
-    end
+    catchTrial=randi(2)-1%0 or 1. Randomly determined on each trial
+    catchTrial=0;
     if catchTrial==1
         currentAmplitude=0;
-    elseif catchTrial==0
-        currentAmplitude=finalCurrentVals(currentInd);
-    end
-    if currentAmplitude==0
         FIXT=1000;
         electrode=NaN;
         instance=NaN;
         array=NaN;
         falseAlarm=0;
-    elseif currentAmplitude>0
+    elseif catchTrial==0
         FIXT=random('unif',300,700);%
-        %Connect to the stimulator
-        if length(my_devices)>1
-            stimulator.connect;
-        end
-        falseAlarm=NaN;
-        
-        array=10;
         %select array & electrode index (sorted by lowest to highest impedance) for microstimulation
-        switch array
-            case 8
-                maxElectrodes=45;
-            case 9
-                maxElectrodes=15;
-            case 10
-                maxElectrodes=36;
-            case 11
-                maxElectrodes=7;
-            case 12
-                maxElectrodes=45;
-            case 13
-                maxElectrodes=34;
-            case 14
-                maxElectrodes=30;
-            case 15
-                maxElectrodes=10;
-        end
-        
-        instance=ceil(array/2);
-        load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat'])
+        falseAlarm=NaN;
+                
+        array=13;
+        electrode=37;
+        load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat']);
         eval(['arrayRFs=array',num2str(array),';']);
-        electrode=40;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
-        electrodeInd=find(arrayRFs(:,8)==electrode);
-%         while electrode<33%if only 2nd bank is connected to CereStim, not 1st bank
-%             electrodeInd=electrodeInd+1;
-%             if electrodeInd>maxElectrodes
-%                 staircaseFinishedFlag=1;
-%             end
-%         end
-        RFx=arrayRFs(electrodeInd,1);
-        RFy=arrayRFs(electrodeInd,2);
+        sprintf('array %d, electrode %d, electrode ind %d',array,electrode,electrodeInd)
+        instance=ceil(array/2);
+        arrayInd=find(arrays==array);
+        desiredStimulator=stimulatorNums(arrayInd);
+        arrayInds=find(goodArrays8to16(:,7)==array);
+        electrodeInds=find(goodArrays8to16(:,8)==electrode);
+        electrodeInd=intersect(arrayInds,electrodeInds);%channel number
+        RFx=goodArrays8to16(electrodeInd,1);
+        RFy=goodArrays8to16(electrodeInd,2);
+        currentAmplitude=goodCurrentThresholds(electrodeInd)*1.5;
+        if currentAmplitude>210
+            currentAmplitude=210;
+        end
         
         % define a waveform
         waveform_id = 1;
         numPulses=50;%originally set to 5 pulses
         %         amplitude=50;%set current level in uA
-        stimulator.setStimPattern('waveform',waveform_id,...
-            'polarity',0,...
-            'pulses',numPulses,...
-            'amp1',currentAmplitude,...
-            'amp2',currentAmplitude,...
-            'width1',170,...
-            'width2',170,...
-            'interphase',60,...
-            'frequency',300);
-        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
     end
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
@@ -258,26 +218,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             sampleX=NaN;
             sampleY=NaN;
         elseif currentAmplitude>0
-            sampleX = RFx;%location of sample stimulus, in RF quadrant 150 230
-            sampleY = -RFy;
-            eccentricity=sqrt(sampleX^2+sampleY^2)
-            if eccentricity<Par.PixPerDeg
-                TargWinSz = 1;
-            elseif eccentricity<2*Par.PixPerDeg
-                TargWinSz = 2;
-            elseif eccentricity<3*Par.PixPerDeg
-                TargWinSz = 3.5;
-            elseif eccentricity<4*Par.PixPerDeg
-                TargWinSz = 4.5;
-            elseif eccentricity<5*Par.PixPerDeg
-                TargWinSz = 6;
-            elseif eccentricity<6*Par.PixPerDeg
-                TargWinSz = 7;
-            elseif eccentricity<7*Par.PixPerDeg
-                TargWinSz = 8;
-            else
-                TargWinSz=8;
-            end
+            sampleX = 170;%arbitrarily large target window
+            sampleY = 170;%arbitrarily large target window
+            TargWinSz=17;
         end
         %control window setup
         if currentAmplitude==0
@@ -346,15 +289,36 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     if Hit == 0 %subject kept fixation, display stimulus
         if currentAmplitude==0%catch trial
             %do nothing
+            pause(.4)
         elseif currentAmplitude>0
+            my_devices = stimulator.scanForDevices;
+            pause(.1)
+            stimulatorInd=find(my_devices==desiredStimulator);
+            stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+            pause(.1)
+            %Connect to the stimulator
+            stimulator.connect;
+            pause(0.1)
+        stimulator.setStimPattern('waveform',waveform_id,...
+            'polarity',0,...
+            'pulses',numPulses,...
+            'amp1',currentAmplitude,...
+            'amp2',currentAmplitude,...
+            'width1',170,...
+            'width2',170,...
+            'interphase',60,...
+            'frequency',300);
+        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
             %deliver microstimulation
             stimulator.manualStim(electrode,waveform_id)
+            %disconnect CereStim
             if length(my_devices)>1
-                %disconnect CereStim
                 stimulator.disconnect;
+                pause(0.1)
             end
         end
         dasbit(  Par.TargetB, 1);
+        tic
         
         %///////// EVENT 3 REACTION TIME%%//////////////////////////////////////
         
@@ -437,6 +401,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 hitCounter=hitCounter+1;
                 missesAtMaxCurrent=[missesAtMaxCurrent 0];
                 response=NaN;
+                condInd=condInd+1;
             end
         elseif Hit == 1
             if currentAmplitude>0%miss trial
@@ -448,7 +413,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 numMissesElectrode=numMissesElectrode+1;%counter for a given electrode
                 missCounter=missCounter+1;
                 missesAtMaxCurrent=[missesAtMaxCurrent 1];
+                condInd=condInd+1;
             end
+        end
+        if condInd>length(chOrder)
+            condInd=1;
         end
         for n=1:length(ident)
             dasbit(ident(n),1);
@@ -462,12 +431,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         elseif missCounter==2%if two misses accrued
             currentInd=currentInd+1;%increase current
             allStaircaseResponse=[allStaircaseResponse 0];
-        end
-        if currentInd>length(finalCurrentVals)
-            currentInd=length(finalCurrentVals);
-        end
-        if currentInd<1
-            currentInd=1;
         end
         if hitCounter==2||missCounter==2
             hitCounter=0;
@@ -483,8 +446,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     Screen('FillRect',w, grey);
     Screen('Flip', w);
     trialNo;
-    allSampleX(trialNo)=sampleX;
-    allSampleY(trialNo)=sampleY;
+    allSampleX(trialNo)=RFx;
+    allSampleY(trialNo)=RFy;
     allFixT(trialNo)=FIXT;
     allStimDur(trialNo)=stimDuration;
     allBlockNo(trialNo)=blockNo;
@@ -494,6 +457,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allArrayNum{trialNo}=array;
     allTargetArrivalTime(trialNo)=Time;
     allFalseAlarms(trialNo)=falseAlarm;
+    allChOrder=electrodeInd;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;
@@ -503,27 +467,27 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         allHitY(trialNo)=NaN;
         allHitRT(trialNo)=NaN;
     end
-    if numHitsElectrode+numMissesElectrode>=10%if performance on microstim trials is poor from beginning, with high current levels, move on to next electrode
-        if sum(missesAtMaxCurrent)/length(missesAtMaxCurrent)>=0.9
-%             staircaseFinishedFlag=1;
-            electrodeInd=electrodeInd+1;
-            catchHit=0;
-            microstimHit=0;
-            microstimMiss=0;
-            numHitsElectrode=0;
-            numMissesElectrode=0;
-            catchFalseAlarms=0;
-            hitCounter=0;
-            missCounter=0;
-            allStaircaseResponse=[];
-            allCurrentLevel=[];
-            missesAtMaxCurrent=0;
-            currentInd=length(finalCurrentVals);%start with the highest current at beginning of staircase procedure
-            if electrodeInd>maxElectrodes
-                staircaseFinishedFlag=1;
-            end
-        end
-    end
+%     if numHitsElectrode+numMissesElectrode>=10%if performance on microstim trials is poor from beginning, with high current levels, move on to next electrode
+%         if sum(missesAtMaxCurrent)/length(missesAtMaxCurrent)>=0.9
+% %             staircaseFinishedFlag=1;
+%             electrodeInd=electrodeInd+1;
+%             catchHit=0;
+%             microstimHit=0;
+%             microstimMiss=0;
+%             numHitsElectrode=0;
+%             numMissesElectrode=0;
+%             catchFalseAlarms=0;
+%             hitCounter=0;
+%             missCounter=0;
+%             allStaircaseResponse=[];
+%             allCurrentLevel=[];
+%             missesAtMaxCurrent=0;
+%             currentInd=length(finalCurrentVals);%start with the highest current at beginning of staircase procedure
+%             if electrodeInd>maxElectrodes
+%                 staircaseFinishedFlag=1;
+%             end
+%         end
+%     end
     send_serial_data(trialNo);%send trial number to NSPs via serial port
     dirName=cd;
     %///////////////////////INTERTRIAL AND CLEANUP
@@ -553,19 +517,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     if trialNo > 0
         save(fn,'*');
     end
-    minNumReversals=40;
-    if numHitsElectrode+numMissesElectrode>=trialsDesired%sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
-        allStaircaseResponse=[];
-        fprintf(['Electrode: ',num2str(electrode),' Hits: ',num2str(numHitsElectrode),' Misses: ',num2str(numMissesElectrode)]);
-        staircaseFinishedFlag=1;
-%         numHitsElectrode=0;
-%         numMissesElectrode=0;
-    end
 end
 
-if length(my_devices)==1
-    %disconnect CereStim
-    stimulator.disconnect;
-end
 Screen('Preference','SuppressAllWarnings',oldEnableFlag);
-Screen('Preference', 'Verbosity', oldLevel);

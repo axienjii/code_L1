@@ -190,7 +190,7 @@ while ~Par.ESC
         if Hit == 0 %subject kept fixation
             cgellipse(0,0,TargSz,TargSz,[0.6,0.2,0.6],'f') %the red fixation dot on the screen
             cgflip(BG(1), BG(2), BG(3))
-             dasbit(Par.TargetB, 1);
+            dasbit(Par.TargetB, 1);
             %EXTRACT USING THE TARGETB
             Hit = 2;
         else
@@ -218,14 +218,14 @@ while ~Par.ESC
 
 %             dasbit(Par.MicroB, 1);
 %             dasbit(Par.CorrectB, 1);
-%             dasbit(Par.RewardB, 1);
-             dasjuice(5.1);
+            dasbit(Par.RewardB, 1);
+            dasjuice(5.1);
             Par.Corrcount = Par.Corrcount + 1;
 
             pause(Par.RewardTime) %RewardTime is in seconds
 
              dasjuice(0.0);
-%             dasbit(Par.RewardB, 0);
+            dasbit(Par.RewardB, 0);
         else
             Hit = 0;
         end

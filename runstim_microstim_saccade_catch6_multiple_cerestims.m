@@ -1,5 +1,8 @@
-function runstim_microstim_saccade_catch6(Hnd)
-%Written by Xing 15/8/17
+function runstim_microstim_saccade_catch6_multiple_cerestims(Hnd)
+%Written by Xing 5/10/17
+%This code is able to select desired CereStim, out of several that are on.
+%For previous version (runstim_microstim_saccade_catch6), had to turn on
+%the correct CereStim and that CereStim only.
 %Determine microstimulation thresholds for electrodes on which monkey
 %reliably reports phosphene percept.
 %On 50% of trials, deliver microstimulation (10 pulses). Monkey has to fixate for 300 ms, followed by
@@ -104,16 +107,12 @@ else
     save(fn,'LOG');
 end
 
+arrays=8:16;
+stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
 %Create stimulator object
 stimulator = cerestim96()
 
-my_devices = stimulator.scanForDevices
-pause(.3)
-stimulator. selectDevice(0); %the number inside the brackets is the stimulator instance number; numbering starts from 0
-pause(.5)
-
-%Connect to the stimulator
-stimulator.connect;
+my_devices = stimulator.scanForDevices;
 
 %////YOUR STIMULATION CONTROL LOOP /////////////////////////////////
 Hit = 2;
@@ -175,12 +174,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %SET UP STIMULI FOR THIS TRIAL
     catchDotTime=1000;%time before catch dot is presented
     stimDuration=randi([120 150]);
-    tempTrialType=randi(4)-1;
-    if tempTrialType<3
-        catchTrial=0;%0 or 1. Randomly determined on each trial
-    else
-        catchTrial=1;%0 or 1. Randomly determined on each trial
-    end
+    catchTrial=randi(2)-1;%0 or 1. Randomly determined on each trial
     if catchTrial==1
         currentAmplitude=0;
     elseif catchTrial==0
@@ -194,13 +188,23 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         falseAlarm=0;
     elseif currentAmplitude>0
         FIXT=random('unif',300,700);%
-        %Connect to the stimulator
-        if length(my_devices)>1
-            stimulator.connect;
-        end
         falseAlarm=NaN;
         
-        array=10;
+        array=11;
+        electrode=24;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
+        
+        arrayInd=find(arrays==array);
+        desiredStimulator=stimulatorNums(arrayInd);
+        stimulatorInd=find(my_devices==desiredStimulator);
+        pause(.3)
+        stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0
+        pause(.5)
+        
+        %Connect to the stimulator
+        temp=stimulator.isConnected;
+        if temp==0
+            stimulator.connect;
+        end
         %select array & electrode index (sorted by lowest to highest impedance) for microstimulation
         switch array
             case 8
@@ -224,7 +228,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         instance=ceil(array/2);
         load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat'])
         eval(['arrayRFs=array',num2str(array),';']);
-        electrode=40;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
         electrodeInd=find(arrayRFs(:,8)==electrode);
 %         while electrode<33%if only 2nd bank is connected to CereStim, not 1st bank
 %             electrodeInd=electrodeInd+1;
@@ -260,23 +263,23 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         elseif currentAmplitude>0
             sampleX = RFx;%location of sample stimulus, in RF quadrant 150 230
             sampleY = -RFy;
-            eccentricity=sqrt(sampleX^2+sampleY^2)
+            eccentricity=sqrt(sampleX^2+sampleY^2);
             if eccentricity<Par.PixPerDeg
                 TargWinSz = 1;
             elseif eccentricity<2*Par.PixPerDeg
-                TargWinSz = 2;
+                TargWinSz = 1.5;
             elseif eccentricity<3*Par.PixPerDeg
-                TargWinSz = 3.5;
+                TargWinSz = 2;
             elseif eccentricity<4*Par.PixPerDeg
-                TargWinSz = 4.5;
+                TargWinSz = 2.5;
             elseif eccentricity<5*Par.PixPerDeg
-                TargWinSz = 6;
+                TargWinSz = 4;
             elseif eccentricity<6*Par.PixPerDeg
-                TargWinSz = 7;
+                TargWinSz = 5;
             elseif eccentricity<7*Par.PixPerDeg
-                TargWinSz = 8;
+                TargWinSz = 6;
             else
-                TargWinSz=8;
+                TargWinSz=4.5;
             end
         end
         %control window setup
@@ -543,7 +546,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %     SCNT(4) = { ['Miss: ' num2str(microstimMiss) ] };
     SCNT(3) = { ['Hit: ' num2str(numHitsElectrode) ] };
     SCNT(4) = { ['Miss: ' num2str(numMissesElectrode) ] };
-    SCNT(5) = { ['Electrode: ' num2str(electrode) ] };
+    if catchTrial==0
+        SCNT(5) = { ['E: ' num2str(electrode),', A:',num2str(array)] };
+    end
     set(Hnd(1), 'String', SCNT ) %display updated numbers in GUI
     
     % Blank screen
@@ -563,9 +568,13 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
 end
 
-if length(my_devices)==1
-    %disconnect CereStim
-    stimulator.disconnect;
+%disconnect CereStim
+if exist('my_devices','var')
+    temp=stimulator.isConnected;
+    if temp==1
+        stimulator.disconnect;
+        pause(0.05)
+    end
 end
 Screen('Preference','SuppressAllWarnings',oldEnableFlag);
 Screen('Preference', 'Verbosity', oldLevel);
