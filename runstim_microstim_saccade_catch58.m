@@ -1,9 +1,7 @@
-function runstim_microstim_saccade_catch28(Hnd)
+function runstim_microstim_saccade_catch58(Hnd)
 %Written by Xing 5/10/17
 %Present 4 targets for 2-phosphene task. 8 trials per subblock. 5 subblocks per block (8*5 = 40 trials). Balanced
 %number of LR vs TB trials, as well as target locations.
-%Defines new set of electrodes with good current thresholds as of 5/10/17 (4 electrodes per set). 
-%Set 1: electrodes 29, 38, 63, 40 (on arrays 12, 13, 15, 10, respectively)
 %Partially visual trials and partially
 %microstim trials. For microstim trials, deliver monopolar microstimulation to electrodes and
 %record saccade end points. Set 'multiCereStim' variable to either 0 or 1 for
@@ -72,6 +70,7 @@ global allLRorTB
 global allTargetLocation
 global last200Trials
 global recentPerf200Trials
+global allNewPhosphenes
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
@@ -185,15 +184,19 @@ recentPerf=NaN;
 recentPerfMicro=NaN;
 recentPerf100Trials=NaN;
 subblockCount=0;
+newPhosphenes=[];
+allNewPhosphenes=[];
 
 trialConds=[1 1 1 1 2 2 2 2;1 1 2 2 1 1 2 2];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %LR vs TB conds in second row: 1: LR; 2: TB
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
+stimulatorNums=[14295 14172 14173 65374 14175 14176 65494 65493 65338];%stimulator to which each array is connected
+
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 blockedDesign=1;%set to 1 to implement blocked design
 
-load('C:\Users\Xing\Lick\currentThresholdChs6.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs35.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 %Create stimulator object
@@ -268,9 +271,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
     FIXT=300;
-    setElectrodes=[49 8 37 51;46 46 40 61];%first row: set 1, LRTB; second row: set 2, LRTB
-    setArrays=[13 10 13 10;16 15 8 12];
-    setInd=2;
+    setElectrodes=[28 53 62 49;27 50 15 58;41 23 38 35;38 62 15 49];%first row: set 1, LRTB; second row: set 2, LRTB
+    setArrays=[12 13 15 13;12 13 15 13;12 12 16 12;16 15 15 13];
+%     setInd=1;
+    setInd=randi(4);
 %     if set==2
 %         diagonal=randi(2);
 %         if diagonal==1%bottom coordinate used for diagonals.
@@ -281,7 +285,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %     end
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
     LRorTB=condOrderLRTB(1);%2 targets, 1: left and right; 2: top and bottom
-    LRorTB=1;
+    LRorTB=2;
     targetLocation=condOrder(1);
 %     targetLocation=2;
     twoPairs=1;
@@ -296,19 +300,19 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 array2=setArrays(setInd,2);
                 electrode=setElectrodes(setInd,3);
                 electrode2=setElectrodes(setInd,2);
-                array=setArrays(setInd,1);%use bottom coordinate
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,1);
-                electrode2=setElectrodes(setInd,4);
+%                 array=setArrays(setInd,1);%use bottom coordinate
+%                 array2=setArrays(setInd,4);
+%                 electrode=setElectrodes(setInd,1);
+%                 electrode2=setElectrodes(setInd,4);
             elseif targetLocation==2
                 array=setArrays(setInd,3);%use top coordinate
                 array2=setArrays(setInd,1);
                 electrode=setElectrodes(setInd,3);
                 electrode2=setElectrodes(setInd,1);
-                array=setArrays(setInd,2);%use bottom coordinate
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,2);
-                electrode2=setElectrodes(setInd,4);
+%                 array=setArrays(setInd,2);%use bottom coordinate
+%                 array2=setArrays(setInd,4);
+%                 electrode=setElectrodes(setInd,2);
+%                 electrode2=setElectrodes(setInd,4);
             end
         elseif LRorTB==2
             targetArrayX=[0 0];
@@ -418,6 +422,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 end
             end
             newPhosphene(:,:,4)=maskblob;
+            newPhosphenes{phospheneInd}=newPhosphene;
             masktex(phospheneInd)=Screen('MakeTexture', w, newPhosphene);
         end
     elseif visualTrial==0
@@ -902,6 +907,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allTrialType(trialNo)=visualTrial;
     allLRorTB(trialNo)=LRorTB;
     allTargetLocation(trialNo)=targetLocation;
+    allNewPhosphenes{trialNo}=newPhosphenes;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;
@@ -913,7 +919,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     send_serial_data(trialNo);%send trial number to NSPs via serial port
     if visualTrial==1
-        save([visStimDir,'\newPhosphene_trial',num2str(trialNo)],'newPhosphene');
+        save([visStimDir,'\newPhosphene_trial',num2str(trialNo)],'newPhosphenes');
     end
     dirName=cd;
     %///////////////////////INTERTRIAL AND CLEANUP

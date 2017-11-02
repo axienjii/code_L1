@@ -1,6 +1,7 @@
-function runstim_microstim_saccade_catch28(Hnd)
-%Written by Xing 5/10/17
-%Present 4 targets for 2-phosphene task. 8 trials per subblock. 5 subblocks per block (8*5 = 40 trials). Balanced
+function runstim_microstim_motion_test(Hnd)
+%Written by Xing 10/10/17
+%Used to test timing of microstimulation on a sequence of electrodes.
+%Present 4 targets for direction of motion task. 8 trials per subblock. 5 subblocks per block (8*5 = 40 trials). Balanced
 %number of LR vs TB trials, as well as target locations.
 %Defines new set of electrodes with good current thresholds as of 5/10/17 (4 electrodes per set). 
 %Set 1: electrodes 29, 38, 63, 40 (on arrays 12, 13, 15, 10, respectively)
@@ -193,7 +194,7 @@ stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulat
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 blockedDesign=1;%set to 1 to implement blocked design
 
-load('C:\Users\Xing\Lick\currentThresholdChs6.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs5.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 %Create stimulator object
@@ -247,7 +248,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     condOrder
     condOrderLRTB
     blockNo
-    visualTrial=0;%adjust
+    visualTrial=1;%adjust
     numTargets=2;
     
     if visualTrial==1
@@ -268,9 +269,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
     FIXT=300;
-    setElectrodes=[49 8 37 51;46 46 40 61];%first row: set 1, LRTB; second row: set 2, LRTB
-    setArrays=[13 10 13 10;16 15 8 12];
-    setInd=2;
+    setElectrodes=[{59 3 43 1 50} {50 1 43 3 59} {58 29 13 12 21} {21 12 13 29 58}];%first row: set 1, LRTB; second row: set 2, LRTB
+    setArrays=[{12 12 12 12 12} {12 12 12 12 12} {12 14 14 16 16} {16 16 14 14 12}];
+    setInd=1;
 %     if set==2
 %         diagonal=randi(2);
 %         if diagonal==1%bottom coordinate used for diagonals.
@@ -283,7 +284,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     LRorTB=condOrderLRTB(1);%2 targets, 1: left and right; 2: top and bottom
     LRorTB=1;
     targetLocation=condOrder(1);
-%     targetLocation=2;
+    targetLocation=1;
     twoPairs=1;
     if twoPairs==1
         if LRorTB==1
@@ -292,23 +293,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             targetArrayYTracker=[0 0];
             targetLocations='LR';
             if targetLocation==1
-                array=setArrays(setInd,3);%use top coordinate
-                array2=setArrays(setInd,2);
-                electrode=setElectrodes(setInd,3);
-                electrode2=setElectrodes(setInd,2);
-                array=setArrays(setInd,1);%use bottom coordinate
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,1);
-                electrode2=setElectrodes(setInd,4);
+                arrays=setArrays(setInd,1);
+                electrodes=setElectrodes(setInd,1);
             elseif targetLocation==2
-                array=setArrays(setInd,3);%use top coordinate
-                array2=setArrays(setInd,1);
-                electrode=setElectrodes(setInd,3);
-                electrode2=setElectrodes(setInd,1);
-                array=setArrays(setInd,2);%use bottom coordinate
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,2);
-                electrode2=setElectrodes(setInd,4);
+                arrays=setArrays(setInd,2);
+                electrodes=setElectrodes(setInd,2);
             end
         elseif LRorTB==2
             targetArrayX=[0 0];
@@ -316,45 +305,38 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             targetArrayYTracker=[200 -200];
             targetLocations='BT';
             if targetLocation==1
-                array=setArrays(setInd,1);
-                array2=setArrays(setInd,2);
-                electrode=setElectrodes(setInd,1);
-                electrode2=setElectrodes(setInd,2);
+                arrays=setArrays(setInd,4);
+                electrodes=setElectrodes(setInd,4);
             elseif targetLocation==2
-                array=setArrays(setInd,3);
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,3);
-                electrode2=setElectrodes(setInd,4);
+                arrays=setArrays(setInd,3);
+                electrodes=setElectrodes(setInd,3);
             end
         end
     end
-    electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
-    electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
-    electrodeInd=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
-    
-    electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode2);%matching channel number
-    electrodeIndtemp2=find(goodArrays8to16(:,7)==array2);%matching array number
-    electrodeInd2=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
-    
-    arrayInd=find(arrays==array);
-    desiredStimulator=stimulatorNums(arrayInd);
-    arrayInd2=find(arrays==array2);
-    desiredStimulator2=stimulatorNums(arrayInd2);
-    falseAlarm=NaN;
+    for electrodeIndex=1:length(electrodes)
+        electrodeIndtemp1=find(goodArrays8to16(:,8)==electrodes(electrodeIndex));%matching channel number
+        electrodeIndtemp2=find(goodArrays8to16(:,7)==arrays(electrodeIndex));%matching array number
+        electrodeInds(electrodeIndex)=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
+        
+        arrayInds(electrodeIndex)=find(arrays==array);
+        desiredStimulator(electrodeIndex)=stimulatorNums(arrayInd);
+        falseAlarm=NaN;        
+    end
+    1 2 3 4 5
             
     instance=ceil(array/2);
     instance2=ceil(array2/2);
     load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat']);
     eval(['arrayRFs=array',num2str(array),';']);
-    RFx=goodArrays8to16(electrodeInd,1);
-    RFy=goodArrays8to16(electrodeInd,2);
-    RFx2=goodArrays8to16(electrodeInd2,1);
-    RFy2=goodArrays8to16(electrodeInd2,2);
+    for electrodeIndex=1:length(electrodes)
+        RFxs(electrodeIndex)=goodArrays8to16(electrodeInd(electrodeIndex),1);
+        RFys(electrodeIndex)=goodArrays8to16(electrodeInd(electrodeIndex),2);
+    end
     
-    visRFx=[RFx RFx2];%locations of visual stimuli
-    visRFy=[RFy RFy2];
+    visRFx=RFxs;%locations of visual stimuli
+    visRFy=RFys;
     if visualTrial==1%visual trial
-        finalPixelCoords=[RFx -RFy;RFx2 -RFy2];
+        finalPixelCoords=[RFxs; -RFys'];
         numSimPhosphenes=2;
         jitterLocation=0;
         if jitterLocation==1
@@ -365,8 +347,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
         
         %randomly set sizes of 'phosphenes'
-        maxDiameter=15;%pixels
-        minDiameter=10;%pixels
+        maxDiameter=20;%pixels
+        minDiameter=5;%pixels
         diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
         diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
         %factor in scaling of RF sizes across cortex:

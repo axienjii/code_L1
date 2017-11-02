@@ -1,4 +1,4 @@
-function runstim_microstim_saccade_catch28(Hnd)
+function runstim_microstim_saccade_catch30(Hnd)
 %Written by Xing 5/10/17
 %Present 4 targets for 2-phosphene task. 8 trials per subblock. 5 subblocks per block (8*5 = 40 trials). Balanced
 %number of LR vs TB trials, as well as target locations.
@@ -187,13 +187,14 @@ recentPerf100Trials=NaN;
 subblockCount=0;
 
 trialConds=[1 1 1 1 2 2 2 2;1 1 2 2 1 1 2 2];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
+trialConds=[1  1  2  2 ;1  2  1  2 ];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %LR vs TB conds in second row: 1: LR; 2: TB
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 blockedDesign=1;%set to 1 to implement blocked design
 
-load('C:\Users\Xing\Lick\currentThresholdChs6.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs8.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 %Create stimulator object
@@ -247,7 +248,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     condOrder
     condOrderLRTB
     blockNo
-    visualTrial=0;%adjust
+    visualTrial%adjust
     numTargets=2;
     
     if visualTrial==1
@@ -268,8 +269,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
     FIXT=300;
-    setElectrodes=[49 8 37 51;46 46 40 61];%first row: set 1, LRTB; second row: set 2, LRTB
-    setArrays=[13 10 13 10;16 15 8 12];
+    setElectrodes=[49 8 37 51;50 27 63 44];%first row: set 1, LRTB; second row: set 2, LRTB
+    setArrays=[13 10 13 10;16 8 14 12];
     setInd=2;
 %     if set==2
 %         diagonal=randi(2);
@@ -281,7 +282,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %     end
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
     LRorTB=condOrderLRTB(1);%2 targets, 1: left and right; 2: top and bottom
-    LRorTB=1;
+    LRorTB=2;
     targetLocation=condOrder(1);
 %     targetLocation=2;
     twoPairs=1;
@@ -296,19 +297,19 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 array2=setArrays(setInd,2);
                 electrode=setElectrodes(setInd,3);
                 electrode2=setElectrodes(setInd,2);
-                array=setArrays(setInd,1);%use bottom coordinate
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,1);
-                electrode2=setElectrodes(setInd,4);
+%                 array=setArrays(setInd,1);%use bottom coordinate
+%                 array2=setArrays(setInd,4);
+%                 electrode=setElectrodes(setInd,1);
+%                 electrode2=setElectrodes(setInd,4);
             elseif targetLocation==2
                 array=setArrays(setInd,3);%use top coordinate
                 array2=setArrays(setInd,1);
                 electrode=setElectrodes(setInd,3);
                 electrode2=setElectrodes(setInd,1);
-                array=setArrays(setInd,2);%use bottom coordinate
-                array2=setArrays(setInd,4);
-                electrode=setElectrodes(setInd,2);
-                electrode2=setElectrodes(setInd,4);
+%                 array=setArrays(setInd,2);%use bottom coordinate
+%                 array2=setArrays(setInd,4);
+%                 electrode=setElectrodes(setInd,2);
+%                 electrode2=setElectrodes(setInd,4);
             end
         elseif LRorTB==2
             targetArrayX=[0 0];
@@ -826,7 +827,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             elseif length(condOrder)==1
                 newSubblock=1;
                 subblockCount=subblockCount+1;
-                if subblockCount>=5
+                if subblockCount>=2%5%edit
                     newBlock=1;
                     subblockCount=0;
                 end

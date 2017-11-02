@@ -263,10 +263,12 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        durIndividualPhosphene=100;
+        durIndividualPhosphene=150;
         FIXT=durIndividualPhosphene*numSimPhosphenes+100;
         disp(FIXT);
         stim_on_flag=0;
+        individualPhospheneFlags=zeros(length(numSimPhosphenes),1);
+        
         while Time < FIXT && Hit== 0
             %Check for 10 ms
             dasrun(5)
@@ -275,12 +277,13 @@ while ~Par.ESC
                 % Draw image for current frame:
               
                 %draw line composed of series of simulated phosphenes
-                for phospheneInd=1:numSimPhosphenes
+                if Time>=
                     destRect=[screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
                     Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
                     Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
                     Screen('Flip', w);
                     pause(durIndividualPhosphene/1000);%0.01
+                    individualPhospheneFlags(
                 end
                 stim_on_flag=1;
 %                 Screen('FillRect',w,grey);

@@ -1,15 +1,6 @@
-function runstim_microstim_saccade_catch11(Hnd)
-%Written by Xing 5/9/17
-%Based on previously measured current threshold values, deliver
-%microstimulation to electrodes and record saccade end points.
-%On 50% of trials, deliver microstimulation (10 pulses). Monkey has to fixate for 300 ms, followed by
-%an interval lasting anywhere from 0 to 400 ms. Monkey is required to make
-%a saccade to RF location, and if correct saccade made, then at 100 ms, fix
-%spot changes colour and reward given. On the other 50% of trials, no microstim
-%administered, and monkey is rewarded for maintaining fixation after 1000 ms.
-%Time allowed to reach target reduced to maximum of 200 ms.
-%This version should have equal timing between stimulation and catch
-%trials, unlike catch10 where mictostim trials lasted 100 ms longer.
+function runstim_microstim_test_waveform3(Hnd)
+%Written by Xing 10/10/17
+%Test microstimulation pulse timing when wait() function is used.
 
 global Par   %global parameters
 global trialNo
@@ -145,10 +136,12 @@ RFy=NaN;
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
 
-load('C:\Users\Xing\Lick\currentThresholdChs2.mat');
+load('C:\Users\Xing\Lick\currentThresholdChs.mat');
 chOrder=originalChOrder;
 condInd=1;
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
+bipolar=0;
+temporalOffset=0;
 
 %Create stimulator object
 stimulator = cerestim96();
@@ -167,7 +160,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     electrodeInd=goodInds(chOrder(condInd));%channel number
     arrayInd=find(arrays==array);
     desiredStimulator=stimulatorNums(arrayInd);
-    desiredStimulator=14294;
+    desiredStimulator=14293;
     
     % define a waveform
     waveform_id = 1;
@@ -191,8 +184,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     priorityLevel=MaxPriority(w);
     Priority(priorityLevel);
     
+    currentAmplitudes=[20 40 60 80 100];
     currentAmplitude=100;
+    currentAmplitude2=200;
     electrode=1;
+    electrode2=2;
     
     my_devices = stimulator.scanForDevices;
     pause(0.5)
@@ -207,40 +203,48 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         'pulses',numPulses,...
         'amp1',currentAmplitude,...
         'amp2',currentAmplitude,...
-        'width1',170,...
-        'width2',170,...
-        'interphase',120,...
+        'width1',100,...
+        'width2',100,...
+        'interphase',60,...
         'frequency',300);
     %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
     %deliver microstimulation
     
-%     waveform_id_Return=2;
-%     stimulator.setStimPattern('waveform',waveform_id_Return,...
-%         'polarity',1,...
-%         'pulses',numPulses,...
-%         'amp1',currentAmplitude,...
-%         'amp2',currentAmplitude,...
-%         'width1',170,...
-%         'width2',170,...
-%         'interphase',60,...
-%         'frequency',300);
-%     BGroupStimulus BGSInput;
-%     
-%     BGSInput.channel[0] = 1;
-%     BGSInput.channel[1] = 45;
-%     BGSInput.pattern[0] = 1;
-%     BGSInput.pattern[1] = 1;
-%     
-%     res = cerestim.groupStimulus(true, true, 1, 2, &BGSInput);
+    waveform_id_Return=2;
+    stimulator.setStimPattern('waveform',waveform_id_Return,...
+        'polarity',1,...
+        'pulses',numPulses,...
+        'amp1',currentAmplitude2,...
+        'amp2',currentAmplitude2,...
+        'width1',100,...
+        'width2',100,...
+        'interphase',60,...
+        'frequency',300);
+
+    stimulator.beginSequence;
+    if bipolar==1
+        stimulator.beginGroup;
+    end
+    stimulator.autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
+    if bipolar==1   
+        wait(200);
+        stimulator.autoStim(electrode2,waveform_id_Return) %Electrode #2 , Waveform #2
+        stimulator.endGroup;
+    end
+    stimulator.endSequence;
     
-    for i=1:32
+    for i=1:2000
         Screen('FillRect',w,red);
         Screen('Flip', w);
 %         stimulator.manualStim(electrode,waveform_id)
-        stimulator.manualStim(i,waveform_id)
+        stimulator.play(1)
         Screen('FillRect',w,grey);
         Screen('Flip', w);
         pause(0.2)
+        dasbit(6,1);
+        pause(0.1);
+        dasbit(6,0);
+        pause(1);
     end
 end
 

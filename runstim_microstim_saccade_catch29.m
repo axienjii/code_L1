@@ -1,4 +1,4 @@
-function runstim_microstim_saccade_catch28(Hnd)
+function runstim_microstim_saccade_catch29(Hnd)
 %Written by Xing 5/10/17
 %Present 4 targets for 2-phosphene task. 8 trials per subblock. 5 subblocks per block (8*5 = 40 trials). Balanced
 %number of LR vs TB trials, as well as target locations.
@@ -193,7 +193,7 @@ stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulat
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 blockedDesign=1;%set to 1 to implement blocked design
 
-load('C:\Users\Xing\Lick\currentThresholdChs6.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs7.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 %Create stimulator object
@@ -268,8 +268,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
     FIXT=300;
-    setElectrodes=[49 8 37 51;46 46 40 61];%first row: set 1, LRTB; second row: set 2, LRTB
-    setArrays=[13 10 13 10;16 15 8 12];
+    setElectrodes=[49 8 37 51;50 27 63 44];%first row: set 1, LRTB; second row: set 2, LRTB
+    setArrays=[13 10 13 10;16 8 14 12];
     setInd=2;
 %     if set==2
 %         diagonal=randi(2);
@@ -281,7 +281,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %     end
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
     LRorTB=condOrderLRTB(1);%2 targets, 1: left and right; 2: top and bottom
-    LRorTB=1;
+    LRorTB=2;
     targetLocation=condOrder(1);
 %     targetLocation=2;
     twoPairs=1;

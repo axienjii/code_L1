@@ -336,7 +336,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     desiredStimulator2=stimulatorNums(arrayInd2);
     falseAlarm=NaN;
     
-    desiredStimulator2=14177;%adjust
+    desiredStimulator2=14293;%adjust 14177
     electrode=1;%adjust
             
     instance=ceil(array/2);
@@ -486,7 +486,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         stimulator2.beginSequence;
         temporallyOffset=1;
         if temporallyOffset==1%if individual pulses on the two trains should be interleaved but non-simultaneous
-            stimulator2.wait(0);%add an offset of 1.65 ms to train on second electrode
+            stimulator2.wait(10);%add a temporal offset to train on second electrode
         end
         if multiCereStim==1
             stimulator2.beginGroup;

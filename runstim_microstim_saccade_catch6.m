@@ -71,7 +71,9 @@ FixWinSz =1.5;%1.5
 
 %Fixatie kleur
 red = [255 0 0];
+brown = [105 0 0];%pink
 fixcol = red;  %mag ook red zijn
+fixcol = brown;  
 
 %timing
 PREFIXT = 1000; %time to enter fixation window
@@ -148,10 +150,10 @@ allHitRT=[];
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 originalFinalCurrentVals=finalCurrentVals;
 % currentInd=length(finalCurrentVals);%start with the highest current at beginning of staircase procedure
-currentInd=find(finalCurrentVals<=150);
+currentInd=find(finalCurrentVals<=60);
 currentInd=currentInd(end);
 % On each trial we ask Quest to recommend an intensity and we call QuestUpdate to save the result in q.
-trialsDesired=40;
+trialsDesired=30;
 wrongRight={'wrong','right'};
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
@@ -173,10 +175,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     TRLMAT(trialNo,:) = ident;
     
     %SET UP STIMULI FOR THIS TRIAL
-    catchDotTime=1000;%time before catch dot is presented
+    catchDotTime=1200;%time before catch dot is presented
     stimDuration=randi([120 150]);
     tempTrialType=randi(4)-1;
-    if tempTrialType<3
+    if tempTrialType<2%3
         catchTrial=0;%0 or 1. Randomly determined on each trial
     else
         catchTrial=1;%0 or 1. Randomly determined on each trial
@@ -187,13 +189,13 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         currentAmplitude=finalCurrentVals(currentInd);
     end
     if currentAmplitude==0
-        FIXT=1000;
+        FIXT=catchDotTime;
         electrode=NaN;
         instance=NaN;
         array=NaN;
         falseAlarm=0;
     elseif currentAmplitude>0
-        FIXT=random('unif',300,700);%
+        FIXT=random('unif',300,900);%
         %Connect to the stimulator
         if length(my_devices)>1
             stimulator.connect;
@@ -224,7 +226,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         instance=ceil(array/2);
         load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat'])
         eval(['arrayRFs=array',num2str(array),';']);
-        electrode=40;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
+        electrode=45;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
         electrodeInd=find(arrayRFs(:,8)==electrode);
 %         while electrode<33%if only 2nd bank is connected to CereStim, not 1st bank
 %             electrodeInd=electrodeInd+1;
@@ -264,7 +266,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             if eccentricity<Par.PixPerDeg
                 TargWinSz = 1;
             elseif eccentricity<2*Par.PixPerDeg
-                TargWinSz = 2;
+                TargWinSz = 1.5;
             elseif eccentricity<3*Par.PixPerDeg
                 TargWinSz = 3.5;
             elseif eccentricity<4*Par.PixPerDeg
@@ -278,6 +280,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             else
                 TargWinSz=8;
             end
+            sampleX = 170;%arbitrarily large target window
+            sampleY = 170;%arbitrarily large target window
+            TargWinSz=17;
         end
         %control window setup
         if currentAmplitude==0

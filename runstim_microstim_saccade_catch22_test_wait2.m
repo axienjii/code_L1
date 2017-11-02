@@ -1,10 +1,16 @@
-function runstim_microstim_saccade_catch28(Hnd)
-%Written by Xing 5/10/17
-%Present 4 targets for 2-phosphene task. 8 trials per subblock. 5 subblocks per block (8*5 = 40 trials). Balanced
-%number of LR vs TB trials, as well as target locations.
-%Defines new set of electrodes with good current thresholds as of 5/10/17 (4 electrodes per set). 
-%Set 1: electrodes 29, 38, 63, 40 (on arrays 12, 13, 15, 10, respectively)
-%Partially visual trials and partially
+function runstim_microstim_saccade_catch22_test_wait2(Hnd)
+%Written by Xing 25/10/17
+%Check timing of pulses when wait() function is used to add temporal delay
+%to a train of pulses. Carried out after motherboard reprogramming and
+%firmware update to v5.4.
+%Used to conduct tests of microstim waveform parameters.
+%Corrected number of pulses in code. Also used to perform checks using blue
+%MIT cable.
+%Fix proportion of T vs B trials within a block.
+%Defines sets of electrodes (4 electrodes per set). 
+%Set 1: electrodes 50, 55, 32, 57 (on arrays 13, 11, 13, 10, respectively)
+%Set 2: electrodes 10, 24, 63, 42 (on arrays 12, 11, 15, 10, respectively)
+%2-phosphene task, 2 targets. Partially visual trials and partially
 %microstim trials. For microstim trials, deliver monopolar microstimulation to electrodes and
 %record saccade end points. Set 'multiCereStim' variable to either 0 or 1 for
 %microstimulation involving more than 1 CereStim.
@@ -68,10 +74,6 @@ global lastTrials
 global lastTrialsMicro
 global allTrialType
 global trialConds
-global allLRorTB
-global allTargetLocation
-global last200Trials
-global recentPerf200Trials
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
@@ -82,10 +84,6 @@ fn = input('Enter LOG file name (e.g. 20110413_B1), blank = no file\n','s');
 fnrs = [fn,'_','runstim.m'];
 cfn = [mfilename('fullpath') '.m'];
 copyfile(cfn,fnrs)
-visStimDir=['C:\Users\Xing\Lick\saccade_task_logs\',fn];
-if ~exist(visStimDir,'dir')
-    mkdir(visStimDir);
-end
 
 screenWidth=Par.HW*2;
 screenHeight=Par.HH*2;
@@ -183,17 +181,16 @@ allTrialType=[];
 allSetInd=[];
 recentPerf=NaN;
 recentPerfMicro=NaN;
-recentPerf100Trials=NaN;
 subblockCount=0;
 
-trialConds=[1 1 1 1 2 2 2 2;1 1 2 2 1 1 2 2];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
-%LR vs TB conds in second row: 1: LR; 2: TB
+trialConds=[1 1 2 2];%trial conditions. For TB trials, 1: target is above; 2: target is below
+
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 blockedDesign=1;%set to 1 to implement blocked design
 
-load('C:\Users\Xing\Lick\currentThresholdChs6.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs2.mat');%increased threshold for electrode 51, array 10 from 13 to 48
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 %Create stimulator object
@@ -209,9 +206,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     if newSubblock==1
         numTrialBlockCounter=0;  
-        newOrder=randperm(size(trialConds,2));
-        condOrder=trialConds(1,newOrder);
-        condOrderLRTB=trialConds(2,newOrder);
+        condOrder=trialConds(randperm(4));
     end
     hitX=NaN;
     hitY=NaN;
@@ -245,10 +240,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     subblockCount
     condOrder
-    condOrderLRTB
     blockNo
     visualTrial=0;%adjust
-    numTargets=2;
     
     if visualTrial==1
         currentAmplitude=0;
@@ -268,9 +261,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
     FIXT=300;
-    setElectrodes=[49 8 37 51;46 46 40 61];%first row: set 1, LRTB; second row: set 2, LRTB
-    setArrays=[13 10 13 10;16 15 8 12];
-    setInd=2;
+    setElectrodes=[50 55 32 57;10 24 63 42];%first row: set 1, LRTB; second row: set 2, LRTB
+%     setElectrodes=[50 55 32 57;25 8 63 42];%first row: set 1, LRTB; second row: set 2, LRTB
+    setElectrodes=[50 55 37 51;25 8 63 42];%first row: set 1, LRTB; second row: set 2, LRTB
+    setArrays=[13 11 13 10;12 10 15 13];
+    setInd=1;
 %     if set==2
 %         diagonal=randi(2);
 %         if diagonal==1%bottom coordinate used for diagonals.
@@ -280,10 +275,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %         end
 %     end
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
-    LRorTB=condOrderLRTB(1);%2 targets, 1: left and right; 2: top and bottom
-    LRorTB=1;
+    LRorTB=randi(2);%2 targets, 1: left and right; 2: top and bottom
+    LRorTB=2;
+    targetLocation=randi([1 2],1);%select target location
     targetLocation=condOrder(1);
-%     targetLocation=2;
     twoPairs=1;
     if twoPairs==1
         if LRorTB==1
@@ -314,7 +309,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             targetArrayX=[0 0];
             targetArrayY=[-200 200];
             targetArrayYTracker=[200 -200];
-            targetLocations='BT';
+            targetLocations='TB';
             if targetLocation==1
                 array=setArrays(setInd,1);
                 array2=setArrays(setInd,2);
@@ -341,6 +336,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     arrayInd2=find(arrays==array2);
     desiredStimulator2=stimulatorNums(arrayInd2);
     falseAlarm=NaN;
+    
+    desiredStimulator=14293;
+    desiredStimulator2=65494;%adjust 14177
+    electrode=1;%adjust
+    electrode2=2;
             
     instance=ceil(array/2);
     instance2=ceil(array2/2);
@@ -365,8 +365,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
         
         %randomly set sizes of 'phosphenes'
-        maxDiameter=15;%pixels
-        minDiameter=10;%pixels
+        maxDiameter=20;%pixels
+        minDiameter=5;%pixels
         diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
         diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
         %factor in scaling of RF sizes across cortex:
@@ -397,15 +397,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             phospheneStyle=1;
             if phospheneStyle==1%light phosphenes
                 phospheneCol=randi(200,[1 3]);
-                if phospheneCol(1)>100
-                    phospheneCol(1)=phospheneCol(1)+55;
-                end
-                if phospheneCol(2)>100
-                    phospheneCol(2)=phospheneCol(2)+55;
-                end
-                if phospheneCol(3)>100
-                    phospheneCol(3)=phospheneCol(3)+55;
-                end
 %                 phospheneCol=[0 0 0];
                 for rbgIndex=1:3
                     newPhosphene(:,:,rbgIndex)=uint8(phospheneRegion*phospheneCol(rbgIndex));
@@ -429,8 +420,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         if currentAmplitude2>210
             currentAmplitude2=210;
         end
-        currentAmplitude
-        currentAmplitude2
         if exist('stimulator','var')
             if stimulator.isConnected
                 stimulator.disconnect;
@@ -444,25 +433,16 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         my_devices = stimulator.scanForDevices;
         stimulatorInd=find(my_devices==desiredStimulator);
         stimulatorInd2=find(my_devices==desiredStimulator2);
-        if stimulatorInd==stimulatorInd2
-            sameStimulator=1;
-        else
-            sameStimulator=0;
-        end
         stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
-        if sameStimulator==0
-            stimulator2.selectDevice(stimulatorInd2-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
-        end
+        stimulator2.selectDevice(stimulatorInd2-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
         %Connect to the stimulator
         temp=stimulator.isConnected;
         if temp==0
             stimulator.connect;
         end
-        if sameStimulator==0
-            temp=stimulator2.isConnected;
-            if temp==0
-                stimulator2.connect;
-            end
+        temp=stimulator2.isConnected;
+        if temp==0
+            stimulator2.connect;
         end
         
         %send initializing trigger (no current)
@@ -480,12 +460,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
         %deliver monopolar microstimulation
         stimulator.beginSequence;
-        if sameStimulator==1
+        if multiCereStim==1
             stimulator.beginGroup;
         end
         stimulator.autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
-        if sameStimulator==1
-            stimulator.autoStim(electrode2,waveform_id) %Electrode #2 , Waveform #1
+        if multiCereStim==1
             stimulator.endGroup;
         end
         stimulator.endSequence;
@@ -496,33 +475,31 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         % 			2			falling (high to low)
         % 			3			any transition
         
-        if sameStimulator==0
-            %other stimulator:
-            stimulator2.setStimPattern('waveform',waveform_id,...
-                'polarity',0,...
-                'pulses',numPulsesFake,...
-                'amp1',currentAmplitudeFake,...
-                'amp2',currentAmplitudeFake,...
-                'width1',170,...
-                'width2',170,...
-                'interphase',60,...
-                'frequency',300);
-            %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
-            stimulator2.beginSequence;
-            temporallyOffset=0;
-            if temporallyOffset==1%if individual pulses on the two trains should be interleaved but non-simultaneous
-                stimulator2.wait(1.65);%add an offset of 1.65 ms to train on second electrode
-            end
-            if multiCereStim==1
-                stimulator2.beginGroup;
-            end
-            stimulator2.autoStim(electrode2,waveform_id) %Electrode #2 , Waveform #1
-            if multiCereStim==1
-                stimulator2.endGroup;
-            end
-            stimulator2.endSequence;
-            stimulator2.trigger(1);
+        %other stimulator:
+        stimulator2.setStimPattern('waveform',waveform_id,...
+            'polarity',0,...
+            'pulses',numPulsesFake,...
+            'amp1',currentAmplitudeFake,...
+            'amp2',currentAmplitudeFake,...
+            'width1',170,...
+            'width2',170,...
+            'interphase',60,...
+            'frequency',300);
+        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
+        stimulator2.beginSequence;
+        temporallyOffset=0;
+        if temporallyOffset==1%if individual pulses on the two trains should be interleaved but non-simultaneous
+            stimulator2.wait(5);%add a temporal offset to train on second electrode
         end
+        if multiCereStim==1
+            stimulator2.beginGroup;
+        end
+        stimulator2.autoStim(electrode2,waveform_id) 
+        if multiCereStim==1
+            stimulator2.endGroup;
+        end
+        stimulator2.endSequence;
+        stimulator2.trigger(1);
         dasbit(Par.MicroB,0);
         pause(0.1);
         dasbit(Par.MicroB,1);
@@ -544,20 +521,20 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             'width2',170,...
             'interphase',60,...
             'frequency',300);
-        if sameStimulator==0
-            %other stimulator:
-            stimulator2.setStimPattern('waveform',waveform_id,...
-                'polarity',0,...
-                'pulses',numPulses,...
-                'amp1',currentAmplitude2,...
-                'amp2',currentAmplitude2,...
-                'width1',170,...
-                'width2',170,...
-                'interphase',60,...
-                'frequency',300);
-            %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
-        end
+        %other stimulator:
+        stimulator2.setStimPattern('waveform',waveform_id,...
+            'polarity',0,...
+            'pulses',numPulses,...
+            'amp1',currentAmplitude2,...
+            'amp2',currentAmplitude2,...
+            'width1',170,...
+            'width2',170,...
+            'interphase',60,...
+            'frequency',300);
+        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
     end
+%     stimulator.trigger(1);%Format: 	cerestim_object.trigger(edge)
+%     stimulator2.trigger(1);
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
         %just redo with current settings
@@ -579,22 +556,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         %control window setup
         WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
             targetArrayX(targetLocation),  targetArrayY(targetLocation), Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];   %2: target; 
-        for distCount=1:length(targetArrayX)-1%distractor opposite from target
+        for distCount=1:length(targetArrayX)-1
             WIN = [WIN;distx(distCount),  disty(distCount), Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 1];%1: error
-        end
-        if LRorTB==1%the other two distractors, for a 4-target task
-            distractArrayX=[0 0];
-            distractArrayY=[-200 200];
-            distractArrayYTracker=[200 -200];
-            distLocations=[distLocations 'TB'];
-        elseif LRorTB==2
-            distractArrayX=[-200 200];
-            distractArrayY=[0 0];
-            distractArrayYTracker=[0 0];
-            distLocations=[distLocations 'LR'];
-        end
-        for distCount=1:length(distractArrayX)
-            WIN = [WIN;distractArrayX(distCount),  distractArrayY(distCount), Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 1];%1: error
         end
         Par.WIN = WIN';
     end
@@ -677,6 +640,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 Screen('Flip', w);
                 stimFlag2=0;
             elseif visualTrial==0&&stimFlag2==1
+                pause(1)%adjust this
                 %             Screen('FillRect',w,red);
                 %             Screen('Flip', w);
                 dasbit(Par.MicroB,1);%send the second half of the second, 'real trigger' signal
@@ -699,23 +663,29 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %             displacementFactor=[-1 1 -1 1;-1 1 1 -1;0 0 -1 1;-1 1 0 0];%4 targets
             if LRorTB==1
                 displacementFactor=[-1 1 -1 1;-1 1 1 -1];%first row: left target, dot 1 x, dot 2 x, dot 1 y, dot 2 y. second row: right target
-                displacementFactor2=[0 0 -1 1;-1 1 0 0];%other 2 distractors
             elseif LRorTB==2
                 displacementFactor=[0 0 -1 1;-1 1 0 0];%top target, bottom target
-                displacementFactor2=[-1 1 -1 1;-1 1 1 -1];%other 2 distractors
             end
-            col=black;
             for i=1:2
+                if i==targetLocation
+                    col=black;
+                else
+                    col=black;
+%                     col=[30 30 30];
+%                     col=[120 120 120];
+                end
                 Screen('FillOval',w,col,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,3) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,3)]);
                 Screen('FillOval',w,col,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,4) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,4)]);
             end
-            if numTargets==4
-                for i=1:2
-                    %                 colDist=[110 110 110];
-                    Screen('FillOval',w,col,[screenWidth/2-targetSize+distractArrayX(i)+targetSize*displacementFactor2(i,1) screenHeight/2-targetSize+distractArrayY(i)+targetSize*displacementFactor2(i,3) screenWidth/2+distractArrayX(i)+targetSize*displacementFactor2(i,1) screenHeight/2+distractArrayY(i)+targetSize*displacementFactor2(i,3)]);
-                    Screen('FillOval',w,col,[screenWidth/2-targetSize+distractArrayX(i)+targetSize*displacementFactor2(i,2) screenHeight/2-targetSize+distractArrayY(i)+targetSize*displacementFactor2(i,4) screenWidth/2+distractArrayX(i)+targetSize*displacementFactor2(i,2) screenHeight/2+distractArrayY(i)+targetSize*displacementFactor2(i,4)]);
-                end
-            end
+%             for i=targetLocation
+%                 Screen('FillOval',w,black,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,3) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,1) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,3)]);
+%                 Screen('FillOval',w,black,[screenWidth/2-targetSize+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2-targetSize+targetArrayY(i)+targetSize*displacementFactor(i,4) screenWidth/2+targetArrayX(i)+targetSize*displacementFactor(i,2) screenHeight/2+targetArrayY(i)+targetSize*displacementFactor(i,4)]);
+%             end
+            
+%             if brightOppositeShape==1
+%                 Screen('FillOval',w,black,[screenWidth/2-targetSize+distx(oppositeShape) screenHeight/2-targetSize+disty(oppositeShape) screenWidth/2+distx(oppositeShape) screenHeight/2+disty(oppositeShape)]);
+%             end
+%             Screen('FillOval',w,black,[screenWidth/2-targetSize+targetArrayX(targetLocation) screenHeight/2-targetSize+targetArrayY(targetLocation) screenWidth/2+targetArrayX(targetLocation) screenHeight/2+targetArrayY(targetLocation)]);
             Screen('FillOval',w,[0 0 255],[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%change fix spot colour to blue
             Screen('Flip', w);
             
@@ -804,10 +774,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 visualCorrect=visualCorrect+1;
                 if Par.Trlcount==1
                     lastTrials=1;
-                    last200Trials=1;
                 else
                     lastTrials=[lastTrials 1];
-                    last200Trials=[last200Trials 1];
                 end
             elseif visualTrial==0
                 fprintf('Trial %3d (microstim) at %5.2f uA is correct\n',trialNo,currentAmplitude);
@@ -821,12 +789,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             end
             if length(condOrder)>1
                 condOrder=condOrder(2:end);
-                condOrderLRTB=condOrderLRTB(2:end);
                 newSubblock=0;
             elseif length(condOrder)==1
                 newSubblock=1;
                 subblockCount=subblockCount+1;
-                if subblockCount>=5
+                if subblockCount>=1
                     newBlock=1;
                     subblockCount=0;
                 end
@@ -840,10 +807,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 visualIncorrect=visualIncorrect+1;
                 if Par.Trlcount==1
                     lastTrials=0;
-                    last200Trials=0;
                 else
                     lastTrials=[lastTrials 0];
-                    last200Trials=[last200Trials 0];
                 end
             elseif visualTrial==0%incorrect trial
                 fprintf('Trial %3d (microstim) at %5.2f uA is incorrect\n',trialNo,currentAmplitude);
@@ -851,16 +816,14 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 numMissesElectrode=numMissesElectrode+1;%counter for a given electrode
                 condInd=condInd+1;
                 if Par.Trlcount==1
-                    lastTrialsMicro=0;
+                    lastTrialsMicro=1;
                 else
                     lastTrialsMicro=[lastTrialsMicro 0];
                 end
             end
             numTrialBlockCounter=numTrialBlockCounter+1;
             if length(condOrder)>1
-                newOrder2=randperm(length(condOrder));
-                condOrder=condOrder(newOrder2);
-                condOrderLRTB=condOrderLRTB(newOrder2);
+                condOrder=condOrder(randperm(length(condOrder)));
                 newSubblock=0;
             end
         end
@@ -900,8 +863,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allMultiCereStim(trialNo)=multiCereStim;
     allSetInd(trialNo)=setInd;
     allTrialType(trialNo)=visualTrial;
-    allLRorTB(trialNo)=LRorTB;
-    allTargetLocation(trialNo)=targetLocation;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;
@@ -912,9 +873,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         allHitRT(trialNo)=NaN;
     end
     send_serial_data(trialNo);%send trial number to NSPs via serial port
-    if visualTrial==1
-        save([visStimDir,'\newPhosphene_trial',num2str(trialNo)],'newPhosphene');
-    end
     dirName=cd;
     %///////////////////////INTERTRIAL AND CLEANUP
     
@@ -943,11 +901,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         lastTrialsMicro=lastTrialsMicro(2:end);
     end
     recentPerfMicro=mean(lastTrialsMicro);
-    
-    if length(last200Trials)>200
-        last200Trials=last200Trials(2:end);
-    end
-    recentPerf200Trials=mean(last200Trials)
     
 %     SCNT = {'TRIALS'};
     SCNT(2) = { ['Nv: ' num2str(visualCorrect+visualIncorrect) ' Nm: ' num2str(numHitsElectrode+numMissesElectrode)]};

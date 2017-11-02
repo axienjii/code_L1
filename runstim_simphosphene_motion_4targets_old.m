@@ -94,9 +94,9 @@ while ~Par.ESC
             shape=1;
         end
         
-        sampleSize = randi([30 60]);%pixels
-        sampleX = randi([30 100]);%location of sample stimulus, in RF quadrant 150 230
-        sampleY = randi([30 100]);
+        sampleSize = randi([30 100]);%pixels
+        sampleX = randi([40 140]);%location of sample stimulus, in RF quadrant 150 230
+        sampleY = randi([40 140]);
         
         targetArrayX=[-200 200 0 0];
         targetArrayY=[0 0 -200 200];
@@ -112,12 +112,12 @@ while ~Par.ESC
 %         targetLocations='TB';
         %set target & distractor locations
         targetLocation=randi([1 4],1);%select target location
-%         if repeat==1
-%             if ~isempty(repeatTargetLocation)
-%                 targetLocation=repeatTargetLocation;
-%             end
-%             repeat=0;
-%         end
+        if repeat==1
+            if ~isempty(repeatTargetLocation)
+                targetLocation=repeatTargetLocation;
+            end
+            repeat=0;
+        end
         stimInd=1:length(targetArrayX);
         distInd=stimInd(stimInd~=targetLocation);
         distLocations=targetLocations(stimInd~=targetLocation);
@@ -185,7 +185,7 @@ while ~Par.ESC
     
     %randomly set sizes of 'phosphenes'
     maxDiameter=15;%pixels
-    minDiameter=10;%pixels
+    minDiameter=5;%pixels
     diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
     diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
     %factor in scaling of RF sizes across cortex:
@@ -263,10 +263,11 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        durIndividualPhosphene=100;
-        FIXT=durIndividualPhosphene*numSimPhosphenes+100;
+        individualPhospheneTime=150;%seconds
+        FIXT=numSimPhosphenes*individualPhospheneTime+300;
         disp(FIXT);
         stim_on_flag=0;
+        simPhospheneFlag=ones(numSimPhosphenes,1);
         while Time < FIXT && Hit== 0
             %Check for 10 ms
             dasrun(5)
@@ -276,16 +277,18 @@ while ~Par.ESC
               
                 %draw line composed of series of simulated phosphenes
                 for phospheneInd=1:numSimPhosphenes
-                    destRect=[screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
-                    Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
-                    Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
-                    Screen('Flip', w);
-                    pause(durIndividualPhosphene/1000);%0.01
+                    if Time>=300+(numSimPhosphenes-1)*individualPhospheneTime&&simPhospheneFlag(numSimPhosphenes)==1
+                        destRect=[screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
+                        Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
+                        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
+                        Screen('Flip', w);
+                        simPhospheneFlag(numSimPhosphenes)=0;
+                    end
                 end
                 stim_on_flag=1;
-%                 Screen('FillRect',w,grey);
-%                 Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
-%                 Screen('Flip', w);
+                Screen('FillRect',w,grey);
+                Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+                Screen('Flip', w);
             end
         end
     else
@@ -328,12 +331,12 @@ while ~Par.ESC
         if Hit == 0 %subject kept fixation, subject may make an eye movement
             
             %Draw targets
-            targetSize=15;%in pixels
-            lightDistractors=1;
+            targetSize=10;%in pixels
+            lightDistractors=0;
             for i=1:length(distx)
                 Screen('FillOval',w,black,[screenWidth/2-targetSize+distx(i) screenHeight/2-targetSize+disty(i) screenWidth/2+distx(i) screenHeight/2+disty(i)]);
                 if lightDistractors==1
-                    Screen('FillOval',w,[0 0 0],[screenWidth/2-targetSize+distx(i) screenHeight/2-targetSize+disty(i) screenWidth/2+distx(i) screenHeight/2+disty(i)]);
+                    Screen('FillOval',w,[80 80 80],[screenWidth/2-targetSize+distx(i) screenHeight/2-targetSize+disty(i) screenWidth/2+distx(i) screenHeight/2+disty(i)]);
                 end
             end
             if brightOppositeShape==1
@@ -437,7 +440,7 @@ while ~Par.ESC
             repeat=1;
             repeatTargetLocation=targetLocation;
         end
-        if length(lastTrials)>30
+        if length(lastTrials)>6
             lastTrials=lastTrials(end-5:end);
         end
         if length(perfR)>10
@@ -479,7 +482,7 @@ while ~Par.ESC
     SCNT = {'TRIALS'};
     SCNT(2) = { ['N: ' num2str(Par.Trlcount) ]};
     SCNT(3) = { ['C: ' num2str(Par.Corrcount) ] };
-    SCNT(4) = { ['P: ' num2str(recentPerf) ] };
+    SCNT(4) = { ['E: ' num2str(Par.Errcount) ] };
     set(Hnd(1), 'String', SCNT ) %display updated numbers in GUI
     
     SD = dasgetnoise();

@@ -263,29 +263,27 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        durIndividualPhosphene=100;
+        durIndividualPhosphene=120;
         FIXT=durIndividualPhosphene*numSimPhosphenes+100;
         disp(FIXT);
         stim_on_flag=0;
+        individualPhosphenesFlags=zeros(numSimPhosphenes,1);
         while Time < FIXT && Hit== 0
             %Check for 10 ms
             dasrun(5)
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
-            if Time>FIXT&&stim_on_flag==0
-                % Draw image for current frame:
-              
-                %draw line composed of series of simulated phosphenes
-                for phospheneInd=1:numSimPhosphenes
+            % Draw image for current frame:
+            
+            %draw line composed of series of simulated phosphenes
+            for phospheneInd=1:numSimPhosphenes
+                if Time>=durIndividualPhosphene*(phospheneInd-1)&&individualPhosphenesFlags(phospheneInd)==0
+                    durIndividualPhosphene*(phospheneInd-1)
                     destRect=[screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+sampleX+finalPixelCoordsAll(phospheneInd,1)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2+sampleY+finalPixelCoordsAll(phospheneInd,2)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
                     Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
                     Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
                     Screen('Flip', w);
-                    pause(durIndividualPhosphene/1000);%0.01
+                    individualPhosphenesFlags(phospheneInd)=1;
                 end
-                stim_on_flag=1;
-%                 Screen('FillRect',w,grey);
-%                 Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
-%                 Screen('Flip', w);
             end
         end
     else
