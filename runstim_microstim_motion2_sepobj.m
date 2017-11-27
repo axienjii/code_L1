@@ -174,11 +174,11 @@ allNewPhosphenes=[];
 trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;1:4 1:4 1:4 1:4];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %index of set of electrodes to use, in second row: 1 to 4
-% arrays=8:16;
-arrays=[10 13 15];
+arrays=8:16;
 % stimulatorNums=[14295 65372 14173 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
-% stimulatorNums=[14295 14177 65372 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
-stimulatorNums=[14177 65376 65494];%stimulator to which each array is connected
+arrays=[10 13 15];
+stimulatorNums=[14295 14177 65376 65374 65375 65372 65494 65493 65338];%stimulator to which each array is connected
+stimulatorNums=[65376 65372 65493];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 
 for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
@@ -190,14 +190,15 @@ dasclearword();
 load('C:\Users\Xing\Lick\currentThresholdChs37.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
-for deviceInd=1:length(stimulatorNums)
-    stimulator(deviceInd) = cerestim96();
-end
 
-my_devices=stimulator(1).scanForDevices
+stimulator1 = cerestim96();
+stimulator2 = cerestim96();
+stimulator3 = cerestim96();
+
+my_devices=stimulator1.scanForDevices
 for deviceInd=1:length(my_devices)
     stimulatorInd=find(my_devices==stimulatorNums(deviceInd));
-    stimulator(deviceInd).selectDevice(stimulatorInd-1) %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+    eval(['stimulator',num2str(deviceInd),'.selectDevice(stimulatorInd-1)']) %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
     pause(0.5)
 end
 while ~Par.ESC&&staircaseFinishedFlag==0
@@ -240,7 +241,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     condOrder
     condOrderSet
     blockNo
-    visualTrial=1;%adjust
+    visualTrial=0;%adjust
     numTargets=2;
     
     if visualTrial==1
@@ -309,13 +310,14 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         RFx(electrodeSequence)=goodArrays8to16(electrodeInd(electrodeSequence),1);
         RFy(electrodeSequence)=goodArrays8to16(electrodeInd(electrodeSequence),2);
     end
-    uniqueStimulators=unique(desiredStimulator)%identify stimulators that are needed
-    ind=[];
-    for iArrangeStimulators=1:length(uniqueStimulators)
-        ind(iArrangeStimulators)=find(uniqueStimulators(iArrangeStimulators)==stimulatorNums);
-    end
-    [dummy indStims]=sort(ind);
-    uniqueStimulators=uniqueStimulators(indStims);
+%     uniqueStimulators=unique(desiredStimulator)%identify stimulators that are needed
+%     ind=[];
+%     for iArrangeStimulators=1:length(uniqueStimulators)
+%         ind(iArrangeStimulators)=find(uniqueStimulators(iArrangeStimulators)==stimulatorNums);
+%     end
+%     [dummy indStims]=sort(ind);
+%     uniqueStimulators=uniqueStimulators(indStims);
+    uniqueStimulators=desiredStimulator%identify stimulators that are needed
     for uniqueStimInd=1:length(uniqueStimulators)
         [dummy tempInd]=find(desiredStimulator==uniqueStimulators(uniqueStimInd));%identify at which point in sequence the stimulator should be activated
         stimSequenceInd{uniqueStimInd}=tempInd;
@@ -407,8 +409,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             [dummy tempInd]=find(desiredStimulator==uniqueStimulators(uniqueStimInd));%identify at which point in sequence the stimulator should be activated
             currentAmplitudeSequenceInd{uniqueStimInd}=currentAmplitude(tempInd);%identify at which point in sequence the stimulator should be activated
         end
-        isFake=0;
-        send_stim_multiple_CereStims(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,isFake,stimulatorNums,stimulator,stimSequenceInd)
+        send_stim_multiple_CereStims_sepobj(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,stimulatorNums,stimulator1,stimulator2,stimulator3,stimSequenceInd)
     end
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
@@ -537,9 +538,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 end
                 for uniqueStimInd=1:length(uniqueStimulators)
                     stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
-                    seq_stat=stimulator(stimulatorInd).getSequenceStatus();
+                    eval(['seq_stat=stimulator',num2str(stimulatorInd),'.getSequenceStatus();'])
                     disp(['status= ' num2str(seq_stat)])
-                    stimulator(stimulatorInd).disableTrigger;                    
+                    eval(['stimulator',num2str(stimulatorInd),'.disableTrigger;'])                 
                 end
                 stimFlag2=0;
 %                 Screen('FillRect',w,grey);
@@ -801,11 +802,11 @@ end
     %disconnect CereStim
     if exist('my_devices','var')
         for deviceInd=1:length(my_devices)
-            stimulator(deviceInd).selectDevice(deviceInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+            eval(['stimulator',num2str(deviceInd),'.selectDevice(deviceInd-1);']) %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
 %             temp=stimulator.isConnected;
 %             if temp==1
 %                 %Connect to the stimulator
-                stimulator(deviceInd).disconnect;
+                eval(['stimulator',num2str(deviceInd),'.disconnect;'])
 %             end
             pause(0.05)
         end

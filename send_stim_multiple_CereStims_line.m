@@ -1,4 +1,4 @@
-function send_stim_multiple_CereStims(uniqueStimulators,currentAmplitude,electrode,isFake,stimulatorNums,stimulator,stimSequenceInd)
+function send_stim_multiple_CereStims_line(uniqueStimulators,currentAmplitude,electrode,isFake,stimulatorNums,stimulator,stimSequenceInd)
 %Written by Xing 31/10/17
 %Delivery of microstimulation pulses, either for fake triggers or real
 %triggers.
@@ -61,12 +61,6 @@ for uniqueStimInd=1:length(uniqueStimulators)
         pause(0.1)%adjust
     elseif isFake==0
         for electrodeOnStimInd=1:length(stimSequenceInd{uniqueStimInd})%for each electrode that is controlled by a given stimulator
-            if stimSequenceInd{uniqueStimInd}(electrodeOnStimInd)>1%if it is not the first electrode in the whole sequence, add a delay. the variable stimSequenceInd contains an index that is relative to the whole sequence, not just to the electrodes for a particular stimulator
-                stimulator(stimulatorInd).wait(150*(stimSequenceInd{uniqueStimInd}(electrodeOnStimInd)-1))%adjust
-                disp(['electrode order = ' num2str(stimSequenceInd{uniqueStimInd}(electrodeOnStimInd))])
-                disp(['time delay (ms) = ' num2str(150*(stimSequenceInd{uniqueStimInd}(electrodeOnStimInd)-1))])
-                pause(0.1)%adjust
-            end
             stimulator(stimulatorInd).autoStim(electrode{uniqueStimInd}(electrodeOnStimInd),waveform_id(electrodeOnStimInd)) %Electrode #1 , Waveform #1
             pause(0.1)%adjust
         end

@@ -9,19 +9,35 @@ if isFake==1
     electrode=1;
 else
     numPulses=45;
-%     numPulses=1;%adjust
+    numPulses=1;%adjust
 end
 for uniqueStimInd=1:length(uniqueStimulators)
     stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
     isconnected=stimulator(stimulatorInd).isConnected();
     disp(['ISconnected? = ' num2str(isconnected)])
     pause(0.1)%adjust
+    status = stimulator(stimulatorInd).getSequenceStatus();
+%     while status ~= 0
+%         status = stimulator(stimulatorInd).getSequenceStatus();
+%         disp(['point 1, status ',num2str(status)])
+%     end
     
     if ~isconnected
         % compulsory step
         stimulator(stimulatorInd).connect
         pause(0.5)
+        status = stimulator(stimulatorInd).getSequenceStatus();
+%         while status ~= 0
+%             status = stimulator(stimulatorInd).getSequenceStatus();
+%             disp(['point 2, status ',num2str(status)])
+%         end
     end
+    status = stimulator(stimulatorInd).getSequenceStatus();
+%     while status ~= 0
+%         status = stimulator(stimulatorInd).getSequenceStatus();
+%         disp(['point 3, status ',num2str(status)])
+%     end
+%     disp(['status= ' num2str(seq_stat)])
     if isFake==1
             stimulator(stimulatorInd).setStimPattern('waveform',waveform_id,...
                 'polarity',1,...
@@ -51,14 +67,25 @@ for uniqueStimInd=1:length(uniqueStimulators)
                 'width2',170,...
                 'interphase',60,...
                 'frequency',300);
-            pause(0.3)%adjust
+            pause(0.1)%adjust
+            status = stimulator(stimulatorInd).getSequenceStatus();
+%             while status ~= 0
+%                 status = stimulator(stimulatorInd).getSequenceStatus();
+%                 disp(['point 5, status ',num2str(status)])
+%             end
         end
     end
     stimulator(stimulatorInd).beginSequence;
     pause(0.1)%adjust
+    status = stimulator(stimulatorInd).getSequenceStatus();
+%     while status ~= 0
+%         status = stimulator(stimulatorInd).getSequenceStatus();
+%         disp(['point 6, status ',num2str(status)])
+%     end
     if isFake==1
         stimulator(stimulatorInd).autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
         pause(0.1)%adjust
+        status = stimulator(stimulatorInd).getSequenceStatus();
     elseif isFake==0
         for electrodeOnStimInd=1:length(stimSequenceInd{uniqueStimInd})%for each electrode that is controlled by a given stimulator
             if stimSequenceInd{uniqueStimInd}(electrodeOnStimInd)>1%if it is not the first electrode in the whole sequence, add a delay. the variable stimSequenceInd contains an index that is relative to the whole sequence, not just to the electrodes for a particular stimulator
@@ -80,13 +107,13 @@ for uniqueStimInd=1:length(uniqueStimulators)
     end
     stimulator(stimulatorInd).trigger(1);%Format: 	cerestim_object.trigger(edge)
     pause(0.1)%adjust
+    if stimulatorInd==3
+        dasbit(1,1);
+        pause(0.1)
+        dasbit(1,0);
+        pause(0.1)
+    end
     isconnected=stimulator(stimulatorInd).isConnected();
     pause(0.1)%adjust
     disp(['ISconnected? = ' num2str(isconnected)])
 end
-%     if stimulatorInd==3
-%         dasbit(1,1);
-%         pause(0.1)
-%         dasbit(1,0);
-%         pause(0.1)
-%     end

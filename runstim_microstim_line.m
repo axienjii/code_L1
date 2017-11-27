@@ -1,12 +1,12 @@
-function runstim_microstim_motion2(Hnd)
-%Written by Xing 26/10/17
-%Present 4 targets for direction-of-motion task. 
-%Partially visual trials and partially
-%microstim trials. For microstim trials, deliver monopolar microstimulation to electrodes (45 pulses). 
-%Script uses stimulator.trigger() to trigger delivery
-%of stimulation. 
-%Uses new function, send_stim_multiple_CereStims, to set waveform
-%parameters and triggers.
+function runstim_microstim_line(Hnd)
+%Written by Xing 27/11/17
+%Present 2 targets for multiple-phosphene task. Many different electrode sets (each with 2 groups of horizontally or vertically oriented electrodes)
+%For microstim trials, deliver monopolar microstimulation to electrodes and
+%record saccade end points. Set 'multiCereStim' variable to either 0 or 1 for
+%microstimulation involving more than 1 CereStim.
+%On some percentage of trials, deliver microstimulation (50 pulses). Monkey has to fixate for 300 ms, followed by
+%an interval lasting anywhere from 0 to 400 ms. 
+%Time allowed to reach target reduced to maximum of 200 ms.
 
 global Par   %global parameters
 global trialNo
@@ -265,7 +265,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     LRorTB=2;
     setInd=condOrderSet(1);
     setInd=1;%adjust
-    [setElectrodes,setArrays]=lookup_set_electrodes_motion(setInd);
+    [setElectrodes,setArrays]=lookup_set_electrodes_line(setInd);
     targetLocation=condOrder(1);
 %     targetLocation=1;%adjust
     if LRorTB==1
@@ -408,7 +408,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             currentAmplitudeSequenceInd{uniqueStimInd}=currentAmplitude(tempInd);%identify at which point in sequence the stimulator should be activated
         end
         isFake=0;
-        send_stim_multiple_CereStims(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,isFake,stimulatorNums,stimulator,stimSequenceInd)
+        send_stim_multiple_CereStims_line(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,isFake,stimulatorNums,stimulator,stimSequenceInd)
     end
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
@@ -534,12 +534,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 pause(0.1);
                 for electrodeSequence=1:length(setElectrodes{1});
                     sprintf('array %d, electrode %d, electrode ind %d',array(electrodeSequence),electrode(electrodeSequence),electrodeInd(electrodeSequence))
-                end
-                for uniqueStimInd=1:length(uniqueStimulators)
-                    stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
-                    seq_stat=stimulator(stimulatorInd).getSequenceStatus();
-                    disp(['status= ' num2str(seq_stat)])
-                    stimulator(stimulatorInd).disableTrigger;                    
                 end
                 stimFlag2=0;
 %                 Screen('FillRect',w,grey);
@@ -795,6 +789,17 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         save(fn,'*');
     end
     pause(0.1);%adjust
+    
+    if visualTrial==0        
+        for uniqueStimInd=1:length(uniqueStimulators)
+            stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
+            seq_stat=stimulator(stimulatorInd).getSequenceStatus();
+            disp(['status= ' num2str(seq_stat)])
+            if seq_stat==4%if CereStim is waiting for a trigger
+                stimulator(stimulatorInd).disableTrigger;
+            end
+        end
+    end
 end
 % 
 % if visualTrial==0

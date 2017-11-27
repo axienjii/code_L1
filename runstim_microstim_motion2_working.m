@@ -174,11 +174,8 @@ allNewPhosphenes=[];
 trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;1:4 1:4 1:4 1:4];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %index of set of electrodes to use, in second row: 1 to 4
-% arrays=8:16;
-arrays=[10 13 15];
-% stimulatorNums=[14295 65372 14173 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
-% stimulatorNums=[14295 14177 65372 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
-stimulatorNums=[14177 65376 65494];%stimulator to which each array is connected
+arrays=8:16;
+stimulatorNums=[14295 65372 14173 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 
 for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
@@ -187,7 +184,7 @@ for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
 end
 dasclearword();
 
-load('C:\Users\Xing\Lick\currentThresholdChs37.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs36.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 for deviceInd=1:length(stimulatorNums)
@@ -267,7 +264,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     setInd=1;%adjust
     [setElectrodes,setArrays]=lookup_set_electrodes_motion(setInd);
     targetLocation=condOrder(1);
-%     targetLocation=1;%adjust
+%     targetLocation=2;
     if LRorTB==1
         targetArrayX=[-200 200];
         targetArrayY=[0 0];
@@ -309,7 +306,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         RFx(electrodeSequence)=goodArrays8to16(electrodeInd(electrodeSequence),1);
         RFy(electrodeSequence)=goodArrays8to16(electrodeInd(electrodeSequence),2);
     end
-    uniqueStimulators=unique(desiredStimulator)%identify stimulators that are needed
+    uniqueStimulators=unique(desiredStimulator);%identify stimulators that are needed
     ind=[];
     for iArrangeStimulators=1:length(uniqueStimulators)
         ind(iArrangeStimulators)=find(uniqueStimulators(iArrangeStimulators)==stimulatorNums);

@@ -150,10 +150,8 @@ allHitRT=[];
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 originalFinalCurrentVals=finalCurrentVals;
 % currentInd=length(finalCurrentVals);%start with the highest current at beginning of staircase procedure
-currentInd=find(finalCurrentVals<=60);
-currentInd=currentInd(end);
 % On each trial we ask Quest to recommend an intensity and we call QuestUpdate to save the result in q.
-trialsDesired=30;
+trialsDesired=20;
 wrongRight={'wrong','right'};
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
@@ -185,16 +183,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     if catchTrial==1
         currentAmplitude=0;
-    elseif catchTrial==0
-        currentAmplitude=finalCurrentVals(currentInd);
-    end
-    if currentAmplitude==0
         FIXT=catchDotTime;
         electrode=NaN;
         instance=NaN;
         array=NaN;
         falseAlarm=0;
-    elseif currentAmplitude>0
+    elseif catchTrial==0
         FIXT=random('unif',300,900);%
         %Connect to the stimulator
         if length(my_devices)>1
@@ -226,7 +220,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         instance=ceil(array/2);
         load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat'])
         eval(['arrayRFs=array',num2str(array),';']);
-        electrode=45;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
+        electrode=42;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
         electrodeInd=find(arrayRFs(:,8)==electrode);
 %         while electrode<33%if only 2nd bank is connected to CereStim, not 1st bank
 %             electrodeInd=electrodeInd+1;
@@ -236,6 +230,16 @@ while ~Par.ESC&&staircaseFinishedFlag==0
 %         end
         RFx=arrayRFs(electrodeInd,1);
         RFy=arrayRFs(electrodeInd,2);
+        if numHitsElectrode==0&&numMissesElectrode==0
+            load('C:\Users\Xing\Lick\currentThresholdChs37.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+            electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
+            electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
+            electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
+            existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
+            currentInd=find(finalCurrentVals<=existingThreshold);
+            currentInd=currentInd(end);
+        end
+        currentAmplitude=finalCurrentVals(currentInd);
         
         % define a waveform
         waveform_id = 1;

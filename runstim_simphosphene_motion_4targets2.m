@@ -263,7 +263,7 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        durIndividualPhosphene=120;
+        durIndividualPhosphene=150;
         FIXT=durIndividualPhosphene*numSimPhosphenes+100;
         disp(FIXT);
         stim_on_flag=0;

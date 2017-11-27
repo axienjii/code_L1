@@ -1,23 +1,9 @@
-function [setElectrodes,setArrays]=lookup_set_electrodes_motion_test(setInd)
+function [setElectrodes,setArrays]=lookup_set_electrodes_motion(setInd)
 %Written by Xing 25/10/17.
 %Returns the desired electrodes and arrays for a given set of 4 electrodes.
 
 switch(setInd)
     case 1
-%         setElectrodes=[{29} {38} {63} {40}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[{12} {13} {15} {10}];
-%         setElectrodes=[{[63 40 29 38]} {[63 40 29 38]} {[63 40 29 38 63]} {[63 40 29 38 63]}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[{[15 10 12 13]} {[15 10 12 13]} {[15 10 12 13 15]} {[15 10 12 13 15]}];
-%         setElectrodes=[{[63 40 29 38 63]} {[63 40 29 38 63]} {[63 40 46 38 63]} {[63 40 46 38 63]}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[ {[15 10 12 13 15]} {[15 10 12 13 15]} {[15 10 15 13 15]} {[15 10 15 13 15]}];
-%         setElectrodes=[{[63 40 29 38 63]} {[63 40 29 38 63]} {[63 40 38 38 40]} {[63 40 38 38 40]}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[ {[15 10 12 13 15]} {[15 10 12 13 15]} {[15 10 16 13 8]} {[15 10 16 13 8]}];
-%         setElectrodes=[{[63 40 29 38 63]} {[63 40 29 38 63]} {[38 40 63 29 38]} {[38 40 63 29 38]}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[ {[15 10 12 13 15]} {[15 10 12 13 15]} {[13 8 15 12 16]} {[13 8 15 12 16]}];
-%         setElectrodes=[{[63 40 29]} {[63 40 29]} {[38 40 63]} {[38 40 63]}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[ {[15 10 12]} {[15 10 12]} {[13 8 15]} {[13 8 15]}];
-%         setElectrodes=[{[9 48 15 12]} {[9 48 15 12]} {[9 48 15 12]} {[9 48 15 12]}];%first row: set 1, LRTB; second row: set 2, LRTB
-%         setArrays=[ {[9 10 15 16]} {[9 10 15 16]} {[9 10 15 16]} {[9 10 15 16]}];
-        setElectrodes=[{[9 48 15]} {[9 48 15]} {[9 48 15]} {[9 48 15]}];%first row: set 1, LRTB; second row: set 2, LRTB
-        setArrays=[ {[9 10 15]} {[9 10 15]} {[9 10 15]} {[9 10 15]}];
+        setElectrodes=[{[55 42 26]} {[26 42 55]} {[42 34 63]} {[63 34 42]}];%first row: set 1, LRTB; second row: set 2, LRTB
+        setArrays=[ {[11 13 12]} {[12 13 11]} {[10 13 15]} {[15 13 10]}];
 end
