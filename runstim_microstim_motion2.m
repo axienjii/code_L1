@@ -94,7 +94,7 @@ PREFIXT = 1000; %time to enter fixation window
 
 %REactie tijd
 TARGT = 0; %time to keep fixating after target onset before fix goes green (het liefst 400)
-RACT = 600;      %reaction time 250 ms %adjust
+RACT = 250;      %reaction time 250 ms %adjust
 
 Fsz = FixDotSize.*Par.PixPerDeg;
 rewDotSize=0.4.*Par.PixPerDeg;
@@ -175,10 +175,8 @@ trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;1:4 1:4 1:4 1:4];%trial conditions. 
 trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %index of set of electrodes to use, in second row: 1 to 4
 % arrays=8:16;
-arrays=[10 13 15];
-% stimulatorNums=[14295 65372 14173 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
-% stimulatorNums=[14295 14177 65372 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
-stimulatorNums=[14177 65376 65494];%stimulator to which each array is connected
+arrays=8:16;
+stimulatorNums=[14295 65372 14177 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 
 for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
@@ -187,7 +185,7 @@ for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
 end
 dasclearword();
 
-load('C:\Users\Xing\Lick\currentThresholdChs37.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs50.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 for deviceInd=1:length(stimulatorNums)
@@ -240,7 +238,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     condOrder
     condOrderSet
     blockNo
-    visualTrial=1;%adjust
+    visualTrial=0;%adjust
     numTargets=2;
     
     if visualTrial==1
@@ -262,7 +260,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     FIXT=300;
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
 %     LRorTB=condOrderSet(1);%2 targets, 1: left and right; 2: top and bottom
-    LRorTB=2;
+    LRorTB=1;
     setInd=condOrderSet(1);
     setInd=1;%adjust
     [setElectrodes,setArrays]=lookup_set_electrodes_motion(setInd);
@@ -297,7 +295,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     stimSequenceInd=[];
     electrodeInd=[];
     arrayInd=[];
-    for electrodeSequence=1:length(setElectrodes{3});
+    for electrodeSequence=1:length(electrode);
         electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode(electrodeSequence));%matching channel number
         electrodeIndtemp2=find(goodArrays8to16(:,7)==array(electrodeSequence));%matching array number
         electrodeInd(electrodeSequence)=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
@@ -326,7 +324,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     
     visRFx=RFx;%locations of visual stimuli
     visRFy=RFy;
-    numSimPhosphenes=length(setElectrodes{1});
+    numSimPhosphenes=length(electrode);
     if visualTrial==1%visual trial
         finalPixelCoords=[RFx' -RFy'];
         jitterLocation=0;
@@ -396,7 +394,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
     elseif visualTrial==0        
         %set the waveform parameters for the real stimulation trains:
-        for electrodeSequence=1:length(setElectrodes{1})
+        for electrodeSequence=1:length(electrode)
             currentAmplitude(electrodeSequence)=goodCurrentThresholds(electrodeInd(electrodeSequence))*1.5;%adjust
             if currentAmplitude(electrodeSequence)>210
                 currentAmplitude(electrodeSequence)=210;
@@ -408,7 +406,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             currentAmplitudeSequenceInd{uniqueStimInd}=currentAmplitude(tempInd);%identify at which point in sequence the stimulator should be activated
         end
         isFake=0;
-        send_stim_multiple_CereStims(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,isFake,stimulatorNums,stimulator,stimSequenceInd)
+        send_stim_multiple_CereStims(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,stimulatorNums,stimulator,stimSequenceInd)
     end
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
@@ -535,12 +533,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 for electrodeSequence=1:length(setElectrodes{1});
                     sprintf('array %d, electrode %d, electrode ind %d',array(electrodeSequence),electrode(electrodeSequence),electrodeInd(electrodeSequence))
                 end
-                for uniqueStimInd=1:length(uniqueStimulators)
-                    stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
-                    seq_stat=stimulator(stimulatorInd).getSequenceStatus();
-                    disp(['status= ' num2str(seq_stat)])
-                    stimulator(stimulatorInd).disableTrigger;                    
-                end
                 stimFlag2=0;
 %                 Screen('FillRect',w,grey);
 %                 Screen('Flip', w);
@@ -617,8 +609,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     if targetIdentity==1%if correct target selected
         behavResponse(trialNo)=targetLocation;
     elseif targetIdentity>1%if erroneous target selected
-        distractorRow=targetIdentity-1;%row of selected distractor, out of all distractors
-        behavResponse(trialNo)=distLocations(distractorRow);%incorrect target to which saccade was made (L: left; R: right; T: top; B: bottom)
+        targetLocationsNew=[1 2];
+        behavResponse(trialNo)=find(targetLocationsNew~=targetLocation);
+%         distractorRow=targetIdentity-1;%row of selected distractor, out of all distractors
+%         behavResponse(trialNo)=distLocations(distractorRow);%incorrect target to which saccade was made (L: left; R: right; T: top; B: bottom)
     end
     dirName=cd;
     save([dirName,'\',date,'_mot_4targperf.mat'],'behavResponse','performance')
@@ -795,6 +789,17 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         save(fn,'*');
     end
     pause(0.1);%adjust
+    
+    if visualTrial==0        
+        for uniqueStimInd=1:length(uniqueStimulators)
+            stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
+            seq_stat=stimulator(stimulatorInd).getSequenceStatus();
+            disp(['status= ' num2str(seq_stat)])
+            if seq_stat==4%if CereStim is waiting for a trigger
+                stimulator(stimulatorInd).disableTrigger;
+            end
+        end
+    end
 end
 % 
 % if visualTrial==0
