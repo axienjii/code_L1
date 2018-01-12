@@ -178,7 +178,7 @@ trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4];%tr
 % stimulatorNums=[14295 65372 14173 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
 % stimulatorNums=[14295 14177 65372 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 arrays=8:16;
-stimulatorNums=[14295 65372 14177 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 
 for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
@@ -187,7 +187,7 @@ for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
 end
 dasclearword();
 
-load('C:\Users\Xing\Lick\currentThresholdChs48.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs62.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 for deviceInd=1:length(stimulatorNums)
@@ -242,7 +242,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     blockNo
     visualTrial=0;%adjust
     numTargets=2;
-    
+ %     LRorTB=condOrderSet(1);%2 targets, 1: left and right; 2: top and bottom
+    LRorTB=2;
+%     setInd=condOrderSet(1);
+    setInd=30;%adjust
+   
     if visualTrial==1
         currentAmplitude=0;
         electrode=NaN;
@@ -261,10 +265,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     FIXT=random('unif',300,700);%on both visual and microstim trials, time during which monkey is required to fixate, before two dots appear
     FIXT=300;
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
-%     LRorTB=condOrderSet(1);%2 targets, 1: left and right; 2: top and bottom
-    LRorTB=2;
-%     setInd=condOrderSet(1);
-    setInd=5;%adjust
     [setElectrodes,setArrays]=lookup_set_electrodes_line(setInd);
     targetLocation=condOrder(1);
 %     targetLocation=1;%adjust
@@ -407,8 +407,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             [dummy tempInd]=find(desiredStimulator==uniqueStimulators(uniqueStimInd));%identify at which point in sequence the stimulator should be activated
             currentAmplitudeSequenceInd{uniqueStimInd}=currentAmplitude(tempInd);%identify at which point in sequence the stimulator should be activated
         end
-%         send_stim_multiple_CereStims_no_wait(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,stimulatorNums,stimulator,stimSequenceInd)
-        send_stim_multiple_CereStims_line(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,stimulatorNums,stimulator,stimSequenceInd)
+        interleave=1;
+        if interleave==0
+            send_stim_multiple_CereStims_no_wait(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,stimulatorNums,stimulator,stimSequenceInd)
+        elseif interleave==1
+            send_stim_multiple_CereStims_interleaved(uniqueStimulators,currentAmplitudeSequenceInd,electrodeSequenceInd,stimulatorNums,stimulator,stimSequenceInd)
+        end
     end
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
@@ -532,7 +536,15 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             elseif visualTrial==0&&stimFlag2==1
 %                             Screen('FillRect',w,red);
 %                             Screen('Flip', w);
-                dasbit(Par.MicroB,1);%send the trigger signal
+                if interleave==0
+                    dasbit(Par.MicroB,1);%send the trigger signal
+                elseif interleave==1
+                    numPulses=50;
+                    for uniqueStimInd=1:length(uniqueStimulators)%use this code to interleave pulses between electrodes on a given CereStim (and to a lesser extent, between electrodes on different CereStims)
+                        stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
+                        stimulator(stimulatorInd).play(numPulses);
+                    end
+                end
                 pause(0.1);
                 dasbit(Par.MicroB,0);
                 pause(0.1);
@@ -794,7 +806,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     pause(0.1);%adjust
     
-    if visualTrial==0        
+    if visualTrial==0&&interleave==0        
         for uniqueStimInd=1:length(uniqueStimulators)
             stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
             seq_stat=stimulator(stimulatorInd).getSequenceStatus();

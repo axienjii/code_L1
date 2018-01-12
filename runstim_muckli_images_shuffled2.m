@@ -1,6 +1,7 @@
-function runstim_muckli_images(Hnd)
+function runstim_muckli_images_shuffled2(Hnd)
 %Written by Xing 30/10/17
 %Present occluded/intact images during 750-ms fixation period.
+%Second set of images used: morganPetroMuckli2016.
 
 global Par   %global parameters
 global trialNo
@@ -80,7 +81,7 @@ black=[0 0 0];
 averageGrey=[91 91 91];
 
 LOG.fn = 'runstim_occluder';
-LOG.BG = averageGrey;
+LOG.BG = grey;
 LOG.Par = Par;
 LOG.Times = Par.Times;
 % LOG.Frame = frame;
@@ -117,7 +118,11 @@ subblockCount=0;
 allImageConds=[];
 imageCond=NaN;
 
-trialConds=[ones(5,1) ones(5,1)*2 ones(5,1)*3];%stimulus conditions. 
+trialConds=[];
+numConds=24;
+for condNums=1:numConds*2
+    trialConds=[trialConds ones(5,1)*condNums];%stimulus conditions.
+end
 recFinishedFlag=0;
 while ~Par.ESC&&recFinishedFlag==0
     %Pretrial
@@ -211,16 +216,15 @@ while ~Par.ESC&&recFinishedFlag==0
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
             if Time>=preStimDur&&stimFlag==1
                 imageCond=condOrder(1);
-                occlude=0;
-                if occlude==1
-                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\smithMuckli2010\image_',num2str(imageCond),'_occ.png']);
-                elseif occlude==0
-                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\smithMuckli2010\image_',num2str(imageCond),'_nonocc.png']);
+                if imageCond<=numConds
+                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\morganPetroMuckli2016\image_',num2str(imageCond),'_nonocc.png']);
+                elseif imageCond>numConds
+                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\morganPetroMuckli2016\image_',num2str(imageCond-numConds),'_occ.png']);
                 end
                 Screen('FillRect',w,averageGrey);
                 textureIndex=Screen('MakeTexture', w, imageMatrix);
                 Screen('DrawTexture', w, textureIndex);% [,sourceRect] [,destinationRect]
-                if occlude==1
+                if imageCond>numConds
                     Screen('FillRect',w,averageGrey,[1024/2 768/2 1024 768]);
                 end
                 Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
@@ -369,7 +373,7 @@ while ~Par.ESC&&recFinishedFlag==0
     if trialNo > 0
         save(fn,'*');
     end
-    if visualCorrect>330
+    if visualCorrect>numConds*200+50
         recFinishedFlag=1;
     end
 end

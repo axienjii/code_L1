@@ -1,6 +1,7 @@
-function runstim_muckli_images(Hnd)
+function runstim_muckli_images2(Hnd)
 %Written by Xing 30/10/17
 %Present occluded/intact images during 750-ms fixation period.
+%Second set of images used: morganPetroMuckli2016.
 
 global Par   %global parameters
 global trialNo
@@ -117,7 +118,11 @@ subblockCount=0;
 allImageConds=[];
 imageCond=NaN;
 
-trialConds=[ones(5,1) ones(5,1)*2 ones(5,1)*3];%stimulus conditions. 
+trialConds=[];
+numConds=24;
+for condNums=1:numConds
+    trialConds=[trialConds ones(5,1)*condNums];%stimulus conditions.
+end
 recFinishedFlag=0;
 while ~Par.ESC&&recFinishedFlag==0
     %Pretrial
@@ -213,9 +218,9 @@ while ~Par.ESC&&recFinishedFlag==0
                 imageCond=condOrder(1);
                 occlude=0;
                 if occlude==1
-                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\smithMuckli2010\image_',num2str(imageCond),'_occ.png']);
+                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\morganPetroMuckli2016\image_',num2str(imageCond),'_occ.png']);
                 elseif occlude==0
-                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\smithMuckli2010\image_',num2str(imageCond),'_nonocc.png']);
+                    imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\morganPetroMuckli2016\image_',num2str(imageCond),'_nonocc.png']);
                 end
                 Screen('FillRect',w,averageGrey);
                 textureIndex=Screen('MakeTexture', w, imageMatrix);
@@ -369,7 +374,7 @@ while ~Par.ESC&&recFinishedFlag==0
     if trialNo > 0
         save(fn,'*');
     end
-    if visualCorrect>330
+    if visualCorrect>=numConds*100+50-695
         recFinishedFlag=1;
     end
 end

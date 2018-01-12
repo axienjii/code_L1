@@ -179,7 +179,7 @@ while ~Par.ESC
     numSimPhosphenes
     for phospheneInd=1:numSimPhosphenes
         newPhosphene=[];
-       ms=ceil(radiusSimPhosphenes(phospheneInd));        
+        ms=ceil(radiusSimPhosphenes(phospheneInd));
         [x,y]=meshgrid(-ms:ms, -ms:ms);
         
         % Layer 2 (Transparency aka Alpha) is filled with gaussian transparency

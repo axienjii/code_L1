@@ -107,7 +107,7 @@ else
 end
 
 arrays=[8:16];
-stimulatorNums=[14295 65372 14177 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 
 %Create stimulator object
 for deviceInd=1:length(stimulatorNums)
@@ -155,11 +155,14 @@ allHitRT=[];
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
 trialsDesired=15;
-currentThresholdChs=50;
-% arrayNums=[8 8 9 9 9 12 12 12 12 12 12 12 12 13 13 13 14 14 14 14 15 15 15 16 16 16 16 16 16 16 16 16];
-% electrodeNums=[43 19 27 44 26 35 12 2 57 41 22 30 29 47 61 53 39 58 13 29 48 55 46 38 47 40 50 64 61 15 12 7];%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
-electrodeNums=[55];%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
-arrayNums=[15];
+currentThresholdChs=61;
+electrodeNums=[47];
+arrayNums=[16];
+tryDifferentCurrents=[10];
+% tryDifferentCurrents=[];
+uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
+electrodeNums=uniqueInd(:,1);
+arrayNums=uniqueInd(:,2);
 electrodeNumInd=1;
 array=arrayNums(electrodeNumInd);
 electrode=electrodeNums(electrodeNumInd);
@@ -228,7 +231,10 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
             electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
             existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
             currentInd=find(finalCurrentVals<=existingThreshold);
-            currentInd=find(finalCurrentVals<=25);
+            if electrodeNumInd<=length(tryDifferentCurrents)&&~isempty(tryDifferentCurrents)
+                tryDifferentCurrent=tryDifferentCurrents(electrodeNumInd);%use this line and the next, for manually adjusted estimate of current threshold
+                currentInd=find(finalCurrentVals<=tryDifferentCurrent);
+            end
             currentInd=currentInd(end);
             firstTrial=0;
             staircaseFinishedFlag=0;

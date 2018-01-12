@@ -196,7 +196,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
         falseAlarm=NaN;
         
-        array=10;
+        array=8;
         %select array & electrode index (sorted by lowest to highest impedance) for microstimulation
         switch array
             case 8
@@ -220,7 +220,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         instance=ceil(array/2);
         load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat'])
         eval(['arrayRFs=array',num2str(array),';']);
-        electrode=42;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
+        electrode=40;%electrodes 37 and 38 (indices 12 & 13, respectively) on array 13
         electrodeInd=find(arrayRFs(:,8)==electrode);
 %         while electrode<33%if only 2nd bank is connected to CereStim, not 1st bank
 %             electrodeInd=electrodeInd+1;
@@ -237,6 +237,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
             existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
             currentInd=find(finalCurrentVals<=existingThreshold);
+%             currentInd=find(finalCurrentVals<=15);
             currentInd=currentInd(end);
         end
         currentAmplitude=finalCurrentVals(currentInd);

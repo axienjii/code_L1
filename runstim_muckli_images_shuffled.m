@@ -77,6 +77,7 @@ Fsz = FixDotSize.*Par.PixPerDeg;
 
 grey = round([255/2 255/2 255/2]);
 black=[0 0 0];
+averageGrey=[91 91 91];
 
 LOG.fn = 'runstim_occluder';
 LOG.BG = grey;
@@ -172,7 +173,7 @@ while ~Par.ESC&&recFinishedFlag==0
     Abort = false;    %whether subject has aborted before end of trial
     
     %///////// EVENT 0 START FIXATING//////////////////////////////////////
-    Screen('FillRect',w,grey);
+    Screen('FillRect',w,averageGrey);
     Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
     Screen('Flip', w);
     
@@ -215,16 +216,19 @@ while ~Par.ESC&&recFinishedFlag==0
                 elseif imageCond>3
                     imageMatrix=imread(['C:\Users\Xing\Lick\occluder_task_logs\smithMuckli2010\image_',num2str(imageCond-3),'_occ.png']);
                 end
-                Screen('FillRect',w,grey);
+                Screen('FillRect',w,averageGrey);
                 textureIndex=Screen('MakeTexture', w, imageMatrix);
                 Screen('DrawTexture', w, textureIndex);% [,sourceRect] [,destinationRect]
+                if imageCond>3
+                    Screen('FillRect',w,averageGrey,[1024/2 768/2 1024 768]);
+                end
                 Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
                 Screen('Flip', w);
                 dasbit(Par.StimB, 1);
                 stimFlag=0;
             end
             if Time>=FIXT+preStimDur&&stimOffFlag==1
-                Screen('FillRect',w,grey);
+                Screen('FillRect',w,averageGrey);
                 Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
                 Screen('Flip', w);
                 stimOffFlag=0;
@@ -232,7 +236,7 @@ while ~Par.ESC&&recFinishedFlag==0
         end
         if Hit == 0 %subject kept fixation, display stimulus
             Par.Updatxy = 1;
-            Screen('FillRect',w,grey);
+            Screen('FillRect',w,averageGrey);
             Screen('FillOval',w,[0 200 0],[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
             Screen('Flip', w);
             dasbit(Par.TargetB, 1);
@@ -249,7 +253,7 @@ while ~Par.ESC&&recFinishedFlag==0
     %///////// EVENT 2 DISPLAY TARGET(S)
     %//////////////////////////////////////
     
-    Screen('FillRect',w,grey);
+    Screen('FillRect',w,averageGrey);
     Screen('Flip', w);
     targetIdentity=LPStat(6);
     LPStat();
@@ -317,7 +321,7 @@ while ~Par.ESC&&recFinishedFlag==0
         end
     end
     
-    Screen('FillRect',w, grey);
+    Screen('FillRect',w, averageGrey);
     Screen('Flip', w);
     trialNo;
     allFixT(trialNo)=FIXT;
@@ -358,13 +362,13 @@ while ~Par.ESC&&recFinishedFlag==0
     set(Hnd(1), 'String', SCNT ) %display updated numbers in GUI
     
     % Blank screen
-    Screen('FillRect',w, grey);
+    Screen('FillRect',w, averageGrey);
     Screen('Flip', w);
     
     if trialNo > 0
         save(fn,'*');
     end
-    if visualCorrect>330
+    if visualCorrect>660
         recFinishedFlag=1;
     end
 end
