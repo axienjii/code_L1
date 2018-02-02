@@ -1,4 +1,4 @@
-function [setElectrodes,setArrays]=lookup_set_electrodes_line(setInd)
+function [setElectrodes,setArrays]=lookup_set_electrodes_letter(setInd)
 %Written by Xing 27/11/17.
 %Returns the desired electrodes and arrays for a given set of electrodes.
 
@@ -104,6 +104,11 @@ switch(setInd)
     case 33
         setElectrodes=[{[]} {[]} {[42 45 0 20 18]} {[12 38 0 29 57]}];%190118_B & B?
         setArrays=[{[]} {[]} {[10 10 0 10 11]} {[13 10 0 10 10]}];
+    case 34
+%         setElectrodes=[{[39 57 15 30 55 3 41 6 20 23]} {[44 39 58 15 30 27 32 30 10 19]} {[39 37 39 17 41 34 6 11 20 23]} {[41 33 44 39 58 64 12 63 21 23]}];%0118_B & B?
+%         setArrays=[{[16 16 16 16 14 14 12 12 12 12]} {[14 14 16 16 16 8 14 12 12 12]} {[16 16 12 9 12 12 12 12 12 12]} {[12 12 14 14 16 16 16 14 14 12]}];
+        setElectrodes=[{[39 64 30 19 55 3 41 6 20 23]} {[44 39 58 15 30 27 32 30 10 19]} {[39 37 39 17 41 34 6 11 20 23]} {[41 33 44 39 58 64 12 63 21 23]}];%0118_B & B?
+        setArrays=[{[16 16 16 8 14 14 12 12 12 12]} {[14 14 16 16 16 8 14 12 12 12]} {[16 16 12 9 12 12 12 12 12 12]} {[12 12 14 14 16 16 16 14 14 12]}];
 %     case 31%dummy condition, for testing purposes
 %         setElectrodes=[{[]} {[]} {[43 26 21 52 21]} {[38 45 56 7 34]}];%
 %         setArrays=[{[]} {[]} {[10 9 10 12 16]} {[13 8 10 15 11]}];

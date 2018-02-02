@@ -1,18 +1,7 @@
-function runstim_microstim_line_12patterns(Hnd)
-%Written by Xing 8/1/18
-%Present 2 targets for multiple-phosphene task. Many different electrode sets (each with 2 groups of horizontally or vertically oriented electrodes)
-%Delivery of microstimulation pulses, with 12 possible stimulation sequences and patterns.
-%Uses 'mini trains' of pulses, in which pulses are not distributed evenly
-%throughout entire stimulation period, but occur in 'blocks' or
-%'sub-trains,' which alternate between electrode sets A and B.
-%Electrode set A refers to pair of electrodes that is stimulated first,
-%i.e. electrodes 1 and 4 in spatial coordinates.
-%Electrode set B refers to pair of electrodes that is stimulated second,
-%i.e. electrodes 2 and 3 in spatial coordinates.
-%The variable 'numRepeats' determines the number of mini trains. 
-%Monkey has to fixate for 300 ms, followed by
-%an interval lasting anywhere from 0 to 400 ms. 
-%Time allowed to reach target reduced to maximum of 200 ms.
+function runstim_microstim_line_multiple_current_modules_test(Hnd)
+%Written by Xing 1/2/18
+%To test sending of stimulation currents simultaneously on two channels,
+%and check monitor port output from CereStim(s).
 
 global Par   %global parameters
 global trialNo
@@ -179,6 +168,7 @@ newPhosphenes=[];
 allNewPhosphenes=[];
 
 trialConds=[1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2;1:12 1:12];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
+trialConds(2,:)=ones(1,24)*1;
 % trialConds=[1 1 2 2;1:2 1:2];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %index of set of electrodes to use, in second row: 1 to 4
 % arrays=8:16;
@@ -305,20 +295,22 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     electrode=electrode([1:2 4:5]);%4-phosphene line task- use first two and last two electrodes only
     array=array([1:2 4:5]);
-    if stimPattern==1
-        electrode=electrode([1 4]);%only stimulate on outermost 2 electrodes
-        array=array([1 4]);
-    end
-    if stimPattern==2
-        electrode=electrode([2 3]);%only stimulate on innermost 2 electrodes
-        array=array([2 3]);
-    end
-    if stimPattern>2
-        if mod(stimPattern,2)==0%instead of sequence with stimulation on outermost two first, stimulate on innermost two first
-            electrode=electrode([2 1 4 3]);
-            array=array([2 1 4 3]);
-        end
-    end
+    electrode=[5 23 28 29];
+    array=[12 12 12 12];
+%     if stimPattern==1
+%         electrode=electrode([1 4]);%only stimulate on outermost 2 electrodes
+%         array=array([1 4]);
+%     end
+%     if stimPattern==2
+%         electrode=electrode([2 3]);%only stimulate on innermost 2 electrodes
+%         array=array([2 3]);
+%     end
+%     if stimPattern>2
+%         if mod(stimPattern,2)==0%instead of sequence with stimulation on outermost two first, stimulate on innermost two first
+%             electrode=electrode([2 1 4 3]);
+%             array=array([2 1 4 3]);
+%         end
+%     end
     desiredStimulator=[];
     stimSequenceInd=[];
     electrodeInd=[];
@@ -428,6 +420,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 currentAmplitude(electrodeSequence)=210;
             end
         end
+        currentAmplitude=[1 1 1 1];
         currentAmplitude
         for uniqueStimInd=1:length(uniqueStimulators)
             [dummy tempInd]=find(desiredStimulator==uniqueStimulators(uniqueStimInd));%identify at which point in sequence the stimulator should be activated

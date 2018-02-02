@@ -92,10 +92,10 @@ while ~Par.ESC
         elseif mean(perfR)-mean(perfL)>bias
             shape=1;
         end
-        sampleSize = randi([70 155]);%pixels
+        sampleSize = randi([40 100]);%pixels
         stimSize = 40;%size of target letters, in pixels
-        sampleX = randi([60 140]);%location of sample stimulus, in RF quadrant 150 230
-        sampleY = randi([60 140]);
+        sampleX = randi([10 60]);%location of sample stimulus, in RF quadrant 150 230
+        sampleY = randi([10 60]);
         
         a=100;%sample colours
         b=255;
@@ -110,6 +110,7 @@ while ~Par.ESC
         targetArrayY=[0 0 -200 200];
         targetArrayYTracker=[0 0 200 -200];%difference between Cogent and PTB
         allLetters=['EIXT';'OUKV';'SDAZ';'LNYH'];
+        allLetters=['IIII';'OOOO';'AAAA';'LLLL'];
         %set target & distractor locations
         targetLocation=randi([1 4],1);%select target location
         targetLetterNum=randi([1 4],1);%select target letter
@@ -156,7 +157,7 @@ while ~Par.ESC
         
     visualWidth=sampleSize;%in pixels
     visualHeight=visualWidth;%in pixels
-    visualHeightResolution=randi([7 13]);%number of subdivisions in the image height
+    visualHeightResolution=randi([4 6]);%number of subdivisions in the image height
     visualPixSize=floor(visualHeight/visualHeightResolution);
     visualWidthResolution=floor(visualWidth/visualPixSize);%each visual 'pixel' is a square- hence number of columns (in image width) follows automatically from that specified by visualPixSize
     if visualHeight/visualHeightResolution~=floor(visualHeight/visualHeightResolution)
@@ -187,7 +188,7 @@ while ~Par.ESC
     
     degradeVisualStim=0;
     if degradeVisualStim==1%do not generate simulated phosphene at every possible pixel location, but only at a subset of locations
-        numSimPhosphenes=randi([10 200]);%set number of simulated phosphenes/channels comprising visual shape
+        numSimPhosphenes=randi([10 20]);%set number of simulated phosphenes/channels comprising visual shape
         pixels=random('unid',numVisLocations,[numSimPhosphenes,1]);%randomly select the pixels at which simulated phosphenes will be visually presented, out of the set of possible locations
         pixels=sort(pixels);
         finalPixelList=listVisualStim(pixels,:);%get final pixel locations
@@ -202,8 +203,8 @@ while ~Par.ESC
     end
     
     %randomly set sizes of 'phosphenes'
-    maxDiameter=30;%pixels
-    minDiameter=1;%pixels
+    maxDiameter=20;%pixels
+    minDiameter=10;%pixels
     diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
     diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
     %factor in scaling of RF sizes across cortex:
@@ -293,7 +294,7 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        FIXT=random('unif',800,1500);%1000,2300
+        FIXT=random('unif',400,500);%1000,2300
         disp(FIXT);
         stim_on_flag=0;
         while Time < FIXT && Hit== 0
@@ -428,7 +429,7 @@ while ~Par.ESC
     end
     distLettersAllTrials(trialNo,:)=distLetters;
     dirName=cd;
-    save([dirName,'\test\',date,'_perf.mat'],'behavResponse','performance','distLettersAllTrials')
+    save([dirName,'\',date,'_perf.mat'],'behavResponse','performance','distLettersAllTrials')
     
     %///////// POSTTRIAL AND REWARD //////////////////////////////////////
     if Hit ~= 0 && ~Abort %has entered a target window (false or correct)
