@@ -6,7 +6,7 @@ for uniqueStimInd=1:length(uniqueStimulators)
     stimulatorInd=find(stimulatorNums==uniqueStimulators(uniqueStimInd));
     isconnected=stimulator(stimulatorInd).isConnected();
     disp(['ISconnected? = ' num2str(isconnected)])
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     
     if ~isconnected
         % compulsory step
@@ -25,28 +25,28 @@ for uniqueStimInd=1:length(uniqueStimulators)
             'width2',170,...
             'interphase',60,...
             'frequency',300);
-        pause(0.05)%adjust
+        pause(0.01)%adjust
     end
     stimulator(stimulatorInd).beginSequence;
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     stimulator(stimulatorInd).beginGroup;
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     for electrodeOnStimInd=1:length(stimSequenceInd{uniqueStimInd})%for each electrode that is controlled by a given stimulator
         stimulator(stimulatorInd).autoStim(electrode{uniqueStimInd}(electrodeOnStimInd),waveform_id(electrodeOnStimInd)) %Electrode #1 , Waveform #1
-        pause(0.05)%adjust
+        pause(0.01)%adjust
     end
     stimulator(stimulatorInd).endGroup;
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     stimulator(stimulatorInd).endSequence;
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     status = stimulator(stimulatorInd).getSequenceStatus();
     while status ~= 0
         status = stimulator(stimulatorInd).getSequenceStatus();
         disp(['point 11, status ',num2str(status)])
     end
     stimulator(stimulatorInd).trigger(1);%Format: 	cerestim_object.trigger(edge)
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     isconnected=stimulator(stimulatorInd).isConnected();
-    pause(0.05)%adjust
+    pause(0.01)%adjust
     disp(['ISconnected? = ' num2str(isconnected)])
 end

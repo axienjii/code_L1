@@ -373,9 +373,9 @@ while ~Par.ESC&&recFinishedFlag==0
     if trialNo > 0
         save(fn,'*');
     end
-    if visualCorrect>numConds*200+50
-        recFinishedFlag=1;
-    end
+%     if visualCorrect>numConds*200+50-2372-1534
+%         recFinishedFlag=1;
+%     end
 end
 
 Screen('Preference','SuppressAllWarnings',oldEnableFlag);

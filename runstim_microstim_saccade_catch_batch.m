@@ -106,7 +106,7 @@ else
     save(fn,'LOG');
 end
 
-arrays=[8:16];
+arrays=8:16;
 stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 
 %Create stimulator object
@@ -155,11 +155,11 @@ allHitRT=[];
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
 trialsDesired=15;
-currentThresholdChs=61;
-electrodeNums=[47];
-arrayNums=[16];
-tryDifferentCurrents=[10];
+currentThresholdChs=73;
+electrodeNums=45;
+arrayNums=10;
 % tryDifferentCurrents=[];
+tryDifferentCurrents=[10];
 uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
 electrodeNums=uniqueInd(:,1);
 arrayNums=uniqueInd(:,2);
@@ -230,7 +230,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
             electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
             electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
             existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
-            currentInd=find(finalCurrentVals<=existingThreshold);
+            currentInd=find(finalCurrentVals<=1.5*existingThreshold);
             if electrodeNumInd<=length(tryDifferentCurrents)&&~isempty(tryDifferentCurrents)
                 tryDifferentCurrent=tryDifferentCurrents(electrodeNumInd);%use this line and the next, for manually adjusted estimate of current threshold
                 currentInd=find(finalCurrentVals<=tryDifferentCurrent);
@@ -240,7 +240,6 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
             staircaseFinishedFlag=0;
         end
         currentAmplitude=finalCurrentVals(currentInd);
-        
         % define a waveform
         waveform_id = 1;
         numPulses=50;%originally set to 5 pulses
