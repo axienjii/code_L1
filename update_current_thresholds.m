@@ -200,13 +200,69 @@ function update_current_thresholds
 % newCurrentThresholds=ceil(thresholds(:,2));%uA
 % load('X:\best\090218_data\090218_B1_thresholds.mat');
 % load('X:\best\090218_data\090218_B2_thresholds.mat');
-load('X:\best\090218_data\090218_B3_thresholds.mat');
+% load('X:\best\090218_data\090218_B3_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\140218_data\140218_B1_thresholds.mat');
+% load('X:\best\140218_data\140218_B2_thresholds.mat');
+% load('X:\best\140218_data\140218_B3_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\160218_data\160218_B3_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\190218_data\190218_B1_thresholds.mat');
+% load('X:\best\190218_data\190218_B2_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\200218_data\200218_B1_thresholds.mat');
+% load('X:\best\200218_data\200218_B2_thresholds.mat');
+% load('X:\best\200218_data\200218_B3_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\210218_data\210218_B1_thresholds.mat');
+% load('X:\best\210218_data\210218_B2_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\220218_data\220218_B1_thresholds.mat');
+% load('X:\best\220218_data\220218_B2_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\220218_data\220218_B11_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\230218_data\230218_B1_thresholds.mat');
+% load('X:\best\230218_data\230218_B2_thresholds.mat');
+% load('X:\best\230218_data\230218_B3_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\260218_data\260218_B1_thresholds.mat');
+% load('X:\best\260218_data\260218_B2_thresholds.mat');
+% load('X:\best\260218_data\260218_B3_thresholds.mat');
+% load('X:\best\260218_data\260218_B4_thresholds.mat');
+% electrodes=thresholds(:,3);
+% arrays=thresholds(:,4);
+% newCurrentThresholds=ceil(thresholds(:,2));%uA
+% load('X:\best\280218_data\280218_B2_thresholds.mat');
+% load('X:\best\280218_data\280218_B3_thresholds.mat');
+load('X:\best\280218_data\280218_B4_thresholds.mat');
 electrodes=thresholds(:,3);
 arrays=thresholds(:,4);
 newCurrentThresholds=ceil(thresholds(:,2));%uA
 
-latestCurrentThresholdsFile=74;
+latestCurrentThresholdsFile=85;
 load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile),'.mat']);
+% goodCurrentThresholds=goodCurrentThresholdsNew;
+% goodArrays8to16=goodArrays8to16New;
 for i=1:length(newCurrentThresholds)
     electrode=electrodes(i);
     array=arrays(i);
@@ -215,4 +271,4 @@ for i=1:length(newCurrentThresholds)
     electrodeInd=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
     goodCurrentThresholds(electrodeInd)=newCurrentThresholds(i);
 end
-save(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile),'.mat'],'goodArrays8to16','goodCurrentThresholds','goodInds','originalChOrder')
+save(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile),'.mat'],'goodArrays8to16','goodCurrentThresholds')

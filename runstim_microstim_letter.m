@@ -183,7 +183,7 @@ for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
 end
 dasclearword();
 
-load('C:\Users\Xing\Lick\currentThresholdChs67.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs82.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 for deviceInd=1:length(stimulatorNums)
@@ -579,7 +579,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             Screen('TextSize',w,stimSize);
             Screen('TextStyle',w,0);
             targcol=[0.75 0.75 0];
-            distcol=[0.55 0.55 0.5];
+%             distcol=[0.55 0.55 0.5];
+            distcol=targcol;
             targcol=targcol.*255;
             distcol=distcol.*255;
             targetLetter=allLetters(targetLocation)

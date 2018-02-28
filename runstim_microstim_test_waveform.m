@@ -145,7 +145,7 @@ RFy=NaN;
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
 
-load('C:\Users\Xing\Lick\currentThresholdChs2.mat');
+load('C:\Users\Xing\Lick\currentThresholdChs76.mat');
 chOrder=originalChOrder;
 condInd=1;
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
@@ -167,7 +167,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     electrodeInd=goodInds(chOrder(condInd));%channel number
     arrayInd=find(arrays==array);
     desiredStimulator=stimulatorNums(arrayInd);
-    desiredStimulator=14294;
+    desiredStimulator=65494;
     
     % define a waveform
     waveform_id = 1;
@@ -236,8 +236,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     for i=1:32
         Screen('FillRect',w,red);
         Screen('Flip', w);
-%         stimulator.manualStim(electrode,waveform_id)
-        stimulator.manualStim(i,waveform_id)
+        stimulator.manualStim(electrode,waveform_id)
+%         stimulator.manualStim(i,waveform_id)
         Screen('FillRect',w,grey);
         Screen('Flip', w);
         pause(0.2)

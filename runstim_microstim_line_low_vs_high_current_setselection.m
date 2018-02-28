@@ -120,12 +120,12 @@ trialConds=[1 1 1 1 2 2 2 2;1 2 1 2 1 2 1 2;1 1 2 2 1 1 2 2];%trial conditions. 
 arrays=8:16;
 stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 
-load('C:\Users\Xing\Lick\currentThresholdChs72.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs73.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 
 visualTrial=0;%adjust
 imposeMinimum=30;%set minimum current level
 LRorTB=2;
-setInd=15;%adjust
+setInd=11;%adjust
 
 %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
 [setElectrodes,setArrays]=lookup_set_electrodes_line(setInd);

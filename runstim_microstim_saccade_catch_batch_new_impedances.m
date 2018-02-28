@@ -156,6 +156,24 @@ load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current
 staircaseFinishedFlag=0;
 trialsDesired=15;
 currentThresholdChs=85;
+% electrodeNums=[61 62 53 59 63 57 58 10 22 60 1 52 9 11];
+% arrayNums=8*ones(1,length(electrodeNums));
+% electrodeNums=[5 38 8 28 13 56 36 45 21 25];
+% arrayNums=9*ones(1,length(electrodeNums));
+% electrodeNums=[15 50 49 4 64 5 25 1 9 60 17 41];
+% arrayNums=10*ones(1,length(electrodeNums));
+% electrodeNums=[25 8 6 16 61 32 48 64 60 62];
+% arrayNums=11*ones(1,length(electrodeNums));
+% electrodeNums=[8 64 31 7 63 16 15 9 17 56 32];
+% arrayNums=12*ones(1,length(electrodeNums));
+% electrodeNums=[19 27 20 18 57 14 28 46 24 10 54 30 36];
+% arrayNums=13*ones(1,length(electrodeNums));
+% electrodeNums=[60 7 48 49 24 64 6];
+% arrayNums=14*ones(1,length(electrodeNums));
+% electrodeNums=[4 1 41 8 29 28 5 37];
+% arrayNums=15*ones(1,length(electrodeNums));
+% electrodeNums=[7 61 58 40 38 44 63 39 30 15 57 35 43 46 47 50 64 22 28 56 16 23 13 19 24 32 53 59 48 11 4 6 2 60 31 62 55 36 9 3 5 10 25 34];
+% arrayNums=16*ones(1,length(electrodeNums));
 electrodeNums=[53 59 60 61 63 5 21 36 4 50];
 arrayNums=[8 8 8 8 8 9 9 9 10 10];
 tryDifferentCurrents=[70 160 110 150 150 150 60 15 60 40];
@@ -229,6 +247,8 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         RFy=arrayRFs(electrodeInd,2);
         if staircaseFinishedFlag==1||firstTrial==1
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+%             goodArrays8to16=goodArrays8to16New;
+%             goodCurrentThresholds=goodCurrentThresholdsNew;
             electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
             electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
             electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number

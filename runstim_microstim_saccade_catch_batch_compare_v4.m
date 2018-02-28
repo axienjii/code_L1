@@ -155,7 +155,7 @@ allFalseAlarms=[];
 allHitX=[];
 allHitY=[];
 allHitRT=[];
-currentHigh=50;
+currentHigh=40;
 currentLow=1;
 numIntervals=6;%one less than number of current conditions
 currentInterval=round((currentHigh-currentLow)/numIntervals);
@@ -169,8 +169,8 @@ load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current
 staircaseFinishedFlag=0;
 trialsDesired=10;
 trialConds=repmat(1:length(currentValsDesired),1,trialsDesired);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
-currentThresholdChs=70;
-electrodeNums=47;
+currentThresholdChs=83;
+electrodeNums=39;
 arrayNums=16;
 % tryDifferentCurrents=[];
 tryDifferentCurrents=[];
@@ -468,16 +468,9 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
                 hitCounter=hitCounter+1;
                 missesAtMaxCurrent=[missesAtMaxCurrent 0];
                 response=NaN;
-            end
-            if length(condOrder)>1
-                condOrder=condOrder(2:end);
-                newSubblock=0;
-            elseif length(condOrder)==1
-                newSubblock=1;
-                subblockCount=subblockCount+1;
-                if subblockCount>=5
-                    newBlock=1;
-                    subblockCount=0;
+                if length(condOrder)>1
+                    condOrder=condOrder(2:end);
+                    newSubblock=0;
                 end
             end
         elseif Hit == 1
@@ -490,10 +483,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
                 numMissesElectrode=numMissesElectrode+1;%counter for a given electrode
                 missCounter=missCounter+1;
                 missesAtMaxCurrent=[missesAtMaxCurrent 1];
-            end
-            if length(condOrder)>1
-                condOrder=condOrder(2:end);
-                newSubblock=0;
+                if length(condOrder)>1
+                    condOrder=condOrder(2:end);
+                    newSubblock=0;
+                end
             end
         end
         for n=1:length(ident)
