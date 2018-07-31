@@ -40,4 +40,5 @@ for deviceInd=1:length(my_devices)
     stimulator(deviceInd).disableTrigger;
     stimulator(deviceInd).disconnect;
     pause(0.05)
+%                     dasbit(6,0);%send the trigger signal
 end

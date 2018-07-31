@@ -1,4 +1,4 @@
-function runstim_microstim_saccade_catch_batch(Hnd)
+function runstim_microstim_saccade_catch_batch_new_impedances(Hnd)
 %Written by Xing 05/12/17
 %Determine microstimulation thresholds for electrodes on which monkey
 %reliably reports phosphene percept.
@@ -8,6 +8,9 @@ function runstim_microstim_saccade_catch_batch(Hnd)
 %spot changes colour and reward given. On the other 50% of trials, no microstim
 %administered, and monkey is rewarded for maintaining fixation after 1000 ms.
 %Time allowed to reach target reduced to maximum of 200 ms.
+%This version of script uses newly identified list of channels with impedances of 150
+%kOhms or lower (as measured on 28/2/18), and combines it with previous
+%list of 201 channels, to obtain 371 channels in total.
 
 global Par   %global parameters
 global trialNo
@@ -107,7 +110,8 @@ else
 end
 
 arrays=8:16;
-stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+% stimulatorNums=[14305 65372 65377 14173 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+stimulatorNums=[14295 65372 14173 65374 65375 65376 65493 14305 65338];%stimulator to which each array is connected
 
 %Create stimulator object
 for deviceInd=1:length(stimulatorNums)
@@ -154,33 +158,20 @@ allHitRT=[];
 
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
-trialsDesired=15;
-currentThresholdChs=85;
-% electrodeNums=[61 62 53 59 63 57 58 10 22 60 1 52 9 11];
-% arrayNums=8*ones(1,length(electrodeNums));
-% electrodeNums=[5 38 8 28 13 56 36 45 21 25];
-% arrayNums=9*ones(1,length(electrodeNums));
-% electrodeNums=[15 50 49 4 64 5 25 1 9 60 17 41];
-% arrayNums=10*ones(1,length(electrodeNums));
-% electrodeNums=[25 8 6 16 61 32 48 64 60 62];
-% arrayNums=11*ones(1,length(electrodeNums));
-% electrodeNums=[8 64 31 7 63 16 15 9 17 56 32];
-% arrayNums=12*ones(1,length(electrodeNums));
-% electrodeNums=[19 27 20 18 57 14 28 46 24 10 54 30 36];
-% arrayNums=13*ones(1,length(electrodeNums));
-% electrodeNums=[60 7 48 49 24 64 6];
-% arrayNums=14*ones(1,length(electrodeNums));
-% electrodeNums=[4 1 41 8 29 28 5 37];
-% arrayNums=15*ones(1,length(electrodeNums));
-% electrodeNums=[7 61 58 40 38 44 63 39 30 15 57 35 43 46 47 50 64 22 28 56 16 23 13 19 24 32 53 59 48 11 4 6 2 60 31 62 55 36 9 3 5 10 25 34];
-% arrayNums=16*ones(1,length(electrodeNums));
-electrodeNums=[53 59 60 61 63 5 21 36 4 50];
-arrayNums=[8 8 8 8 8 9 9 9 10 10];
-tryDifferentCurrents=[70 160 110 150 150 150 60 15 60 40];
-% electrodeNums=[4 64 5 25 1 9 60 17 41 25 8 6 16 61 32 48 64 60 62 8 64 31 7 63 16 15 9 17 56 32 19 27 20 18 57 14 28 46 24 10 54 30 36 60 7 48 49 24 64 6 4 1 41 8 29 28 5 37 7 61 58 40 38 44 63 39 30 15 57 35 43 46 47 50 64 22 28 56 16 23 13 19 24 32 53 59 48 11 4 6 2 60 31 62 55 36 9 3 5 10 25 34];
-% arrayNums=[10*ones(1,9) 11*ones(1,10) 12*ones(1,11) 13*ones(1,13) 14*ones(1,7) 15*ones(1,8) 16*ones(1,44)];
-% tryDifferentCurrents=40*ones(1,length(electrodeNums));
+trialsDesired=30;
+currentThresholdChs=134;
+% setElectrodes=[{[1 26 5 35 6]} {[26 44 34 37 40 24 55 20 28 17 36 39 27 24 7]}];%280518_B & B?
+% setArrays=[{[10 9 9 12 14]} {[9 9 12 16 16 16 14 14 12 10 10 10 13 13 15]}];
+% electrodeNums=[setElectrodes{1} setElectrodes{2} setElectrodes{3} setElectrodes{4}];
+% arrayNums=[setArrays{1} setArrays{2} setArrays{3} setArrays{4}];
+% electrodeNums=[setElectrodes{1} setElectrodes{2}];
+% arrayNums=[setArrays{1} setArrays{2}];
+% electrodeNums=electrodeNums(10:end);
+% arrayNums=arrayNums(10:end);
+electrodeNums=[20];
+arrayNums=[16];
 % tryDifferentCurrents=[];
+tryDifferentCurrents=[20];
 uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
 electrodeNums=uniqueInd(:,1);
 arrayNums=uniqueInd(:,2);
@@ -247,16 +238,19 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         RFy=arrayRFs(electrodeInd,2);
         if staircaseFinishedFlag==1||firstTrial==1
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
-%             goodArrays8to16=goodArrays8to16New;
-%             goodCurrentThresholds=goodCurrentThresholdsNew;
-            electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
-            electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
-            electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
-            existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
-            currentInd=find(finalCurrentVals<=1.5*existingThreshold);
-            if electrodeNumInd<=length(tryDifferentCurrents)&&~isempty(tryDifferentCurrents)
-                tryDifferentCurrent=tryDifferentCurrents(electrodeNumInd);%use this line and the next, for manually adjusted estimate of current threshold
-                currentInd=find(finalCurrentVals<=tryDifferentCurrent);
+            highImpedanceChs=0;%set to 1 for current thresholding on electrodes that are not typically used for microstimulation due to high thresholds
+            if highImpedanceChs==0
+                electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
+                electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
+                electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
+                existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
+                currentInd=find(finalCurrentVals<=1.5*existingThreshold);
+                if electrodeNumInd<=length(tryDifferentCurrents)&&~isempty(tryDifferentCurrents)
+                    tryDifferentCurrent=tryDifferentCurrents(electrodeNumInd);%use this line and the next, for manually adjusted estimate of current threshold
+                    currentInd=find(finalCurrentVals<=tryDifferentCurrent);
+                end
+            else
+                currentInd=find(finalCurrentVals<=30);
             end
             currentInd=currentInd(end);
             firstTrial=0;

@@ -268,7 +268,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
     [setElectrodes,setArrays]=lookup_set_electrodes_line(setInd);
     targetLocation=condOrder(1);
-%     targetLocation=1;%adjust
+    targetLocation=2;%adjust
     if LRorTB==1
         targetArrayX=[-200 200];
         targetArrayY=[0 0];

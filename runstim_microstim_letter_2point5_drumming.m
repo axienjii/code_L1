@@ -1,6 +1,10 @@
-function runstim_microstim_letter(Hnd)
-%Written by Xing 27/1/18
-%Present 4 targets for letter task. Letters are: I, O, A, and L (left,
+function runstim_microstim_letter_2point5_drumming(Hnd)
+%Written by Xing 10/4/18
+%Present 2 or 4 targets for letter task. When incorrect response made,
+%drumming occurs immediately on following trial. For trials with drumming,
+%only show 2 targets. 
+
+%Letters are: I or T, O, A, and L (left, 
 %right, top and bottom targets, respectively). Microstimulation delivered
 %through electrode sets, as specified in lookup_set_electrodes_letter.m.
 
@@ -51,6 +55,8 @@ global allTargetLocation
 global last200Trials
 global recentPerf200Trials
 global allNewPhosphenes
+global drummingTrial
+global allDrummingTrials
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
@@ -79,7 +85,7 @@ Times = Par.Times; %copy timing structure
 %WINDOWS
 %Fix window
 FixWinSz =1.5;%1.5
-TargWinSz = 4;  %CHANGE TO MAKE MORE ACCUARTE
+TargWinSz = 5;  %CHANGE TO MAKE MORE ACCUARTE
 
 %Fixatie kleur
 red = [255 0 0];
@@ -166,9 +172,14 @@ recentPerf100Trials=NaN;
 subblockCount=0;
 newPhosphenes=[];
 allNewPhosphenes=[];
+drummingTrial=0;
+allDrummingTrials=0;
 
-% trialConds=[1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2;1:4 1:4 1:4 1:4];%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
-trialConds=repmat(1:4,[1,12]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
+% trialConds=repmat(1:4,[1,3]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
+% trialConds=[trialConds;repmat(1:4,[1,3])];
+trialConds=repmat(1:4,[1,3]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
+trialConds=[trialConds;repmat(1:4,[1,3])];
+% trialConds=repmat(1:4,[1,12]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %index of set of electrodes to use, in second row: 1 to 4
 % arrays=8:16;
 % stimulatorNums=[14295 65372 14173 65374 65375 65376 65494 65493 65338];%stimulator to which each array is connected
@@ -183,7 +194,7 @@ for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
 end
 dasclearword();
 
-load('C:\Users\Xing\Lick\currentThresholdChs88.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+load('C:\Users\Xing\Lick\currentThresholdChs110.mat');%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 for deviceInd=1:length(stimulatorNums)
@@ -196,7 +207,7 @@ for deviceInd=1:length(my_devices)
     stimulator(deviceInd).selectDevice(stimulatorInd-1) %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
     pause(0.5)
 end
-allLetters=['I';'O';'A';'L'];
+allLetters=['T';'O';'A';'L'];
 while ~Par.ESC&&staircaseFinishedFlag==0
     %Pretrial
     trialNo = trialNo+1;
@@ -239,10 +250,13 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     condOrder
 %     condOrderSet
     blockNo
-    visualTrial=1;%adjust
-    numTargets=2;
+%     visualTrial=randi(2)-1;%adjust
+    visualTrial=0;%adjust
+%     visualTrial=condOrderSet(1);
+    drumming=1;%set to 1 to allow drumming during practice sessions. set to 0 to turn off drumming for 'real' recordings
+    numTargets=4;
 %     setInd=condOrderSet(1);
-    setInd=36;%adjust
+    setInd=40;%adjust
    
     if visualTrial==1
         currentAmplitude=0;
@@ -264,17 +278,24 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     %specify array & electrode index (sorted by lowest to highest impedance) for microstimulation
     [setElectrodes,setArrays]=lookup_set_electrodes_letter(setInd);
     targetLocation=condOrder(1);
-    if size(setElectrodes,2)==4
-        targetArrayX=[-200 200 0 0];
-        targetArrayY=[0 0 200 -200];
-        targetArrayYTracker=[0 0 -200 200];%difference between Cogent and PTB
-        targetLocations='LRTB';
-        array=setArrays{targetLocation};
-        electrode=setElectrodes{targetLocation};
-    elseif size(setElectrodes,2)==2
-        LRorTB=condOrderSet(1);%2 targets, 1: left and right; 2: top and bottom
-%     LRorTB=2;
-        %     targetLocation=1;%adjust
+    targetArrayX=[-200 200 0 0];
+    targetArrayY=[0 0 200 -200];
+    targetArrayYTracker=[0 0 -200 200];%difference between Cogent and PTB
+    targetLocations='LRTB';
+    array=setArrays{targetLocation};
+    electrode=setElectrodes{targetLocation};
+    condLetters=allLetters;
+    if drummingTrial==1
+        if condOrder(1)==1||condOrder(1)==2
+            LRorTB=1;
+        elseif condOrder(1)==3||condOrder(1)==4
+            LRorTB=2;
+        end
+        if condOrder(1)==1||condOrder(1)==3
+            targetLocation=1;
+        elseif condOrder(1)==2||condOrder(1)==4
+            targetLocation=2;
+        end
         if LRorTB==1
             targetArrayX=[-200 200];
             targetArrayY=[0 0];
@@ -287,6 +308,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 array=setArrays{2};
                 electrode=setElectrodes{2};
             end
+            condLetters=allLetters(1:2);
         elseif LRorTB==2
             targetArrayX=[0 0];
             targetArrayY=[200 -200];
@@ -299,6 +321,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 array=setArrays{4};
                 electrode=setElectrodes{4};%check these assignments
             end
+            condLetters=allLetters(3:4);
         end
     end
     desiredStimulator=[];
@@ -405,7 +428,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     elseif visualTrial==0        
         %set the waveform parameters for the real stimulation trains:
         for electrodeSequence=1:length(electrode)
-            currentAmplitude(electrodeSequence)=goodCurrentThresholds(electrodeInd(electrodeSequence))*1.5;%adjust
+            currentAmplitude(electrodeSequence)=goodCurrentThresholds(electrodeInd(electrodeSequence))*2.5;%adjust
             if currentAmplitude(electrodeSequence)>210
                 currentAmplitude(electrodeSequence)=210;
             end
@@ -507,7 +530,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         Time = 1;
         Hit = 0;
         durIndividualPhosphene=167;
-        FIXT2=durIndividualPhosphene+500%adjust
+        FIXT2=durIndividualPhosphene+600;%randi([500 600],1,1)%adjust
         stimFlag2=1;
         stimOffFlag=1;
         individualPhosphenesFlags=zeros(numSimPhosphenes,1);
@@ -583,11 +606,11 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             distcol=targcol;
             targcol=targcol.*255;
             distcol=distcol.*255;
-            targetLetter=allLetters(targetLocation)
+            targetLetter=condLetters(targetLocation)
             Screen('TextFont',w,'Sloan');
             Screen('TextStyle',w,0);
-            for i=1:size(allLetters,1)
-                Screen('DrawText',w,allLetters(i),screenWidth/2-estimatedTargetLetterSize/2+targetArrayX(i),screenHeight/2-estimatedTargetLetterSize/2+targetArrayYTracker(i),targcol);
+            for i=1:length(targetArrayX)
+                Screen('DrawText',w,condLetters(i),screenWidth/2-estimatedTargetLetterSize/2+targetArrayX(i),screenHeight/2-estimatedTargetLetterSize/2+targetArrayYTracker(i),targcol);
             end         
 %             for i=1:size(allLetters,1)-1
 %                 Screen('DrawText',w,distLetters(i),screenWidth/2-estimatedTargetLetterSize/2+distx(i),screenHeight/2-estimatedTargetLetterSize/2+disty(i),distcol);
@@ -688,6 +711,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 else
                     lastTrialsMicro=[lastTrialsMicro 1];
                 end
+                drummingTrial=0;
             end
             if length(condOrder)>1
                 condOrder=condOrder(2:end);
@@ -698,7 +722,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             elseif length(condOrder)==1
                 newSubblock=1;
                 subblockCount=subblockCount+1;
-                if subblockCount>=8
+                if subblockCount>=1
                     newBlock=1;
                     subblockCount=0;
                 end
@@ -727,13 +751,25 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                 else
                     lastTrialsMicro=[lastTrialsMicro 0];
                 end
+                drummingTrial=1;%next trial should be a drumming trial
             end
             numTrialBlockCounter=numTrialBlockCounter+1;
             if length(condOrder)>1
-                newOrder2=randperm(length(condOrder));
-                condOrder=condOrder(newOrder2);
+                if drumming==1
+                    newOrder2=randperm(length(condOrder));
+                elseif drumming==0
+                    condOrder=condOrder(2:end);
+                end
+%                 condOrder=condOrder(newOrder);
 %                 condOrderSet=condOrderSet(newOrder2);
                 newSubblock=0;
+            elseif length(condOrder)==1
+                newSubblock=1;
+                subblockCount=subblockCount+1;
+                if subblockCount>=1
+                    newBlock=1;
+                    subblockCount=0;
+                end
             end
         end
         dasbit(Par.MicroB,0)
@@ -762,11 +798,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allMultiCereStim(trialNo)=multiCereStim;
     allSetInd(trialNo)=setInd;
     allTrialType(trialNo)=visualTrial;
-    if size(setElectrodes,2)==2
+    if size(setElectrodes,2)==2||numTargets==2
         allLRorTB(trialNo)=LRorTB;
     end
     allTargetLocation(trialNo)=targetLocation;
     allNewPhosphenes{trialNo}=newPhosphenes;
+    allDrummingTrials(trialNo+1)=drummingTrial;
     if Hit==2
         allHitX(trialNo)=hitX;
         allHitY(trialNo)=hitY;
@@ -808,8 +845,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     SCNT(2) = { ['Nv: ' num2str(visualCorrect+visualIncorrect) ' Nm: ' num2str(numHitsElectrode+numMissesElectrode)]};
 %     SCNT(3) = { ['N mic: ' num2str(numHitsElectrode+numMissesElectrode) ]};
 %     SCNT(3) = { ['C: ' num2str(Par.Corrcount) ] };
-    SCNT(3) = { ['P vis: ' num2str(recentPerf) ] };
-    SCNT(4) = { ['P mic: ' num2str(recentPerfMicro) ] };
+    SCNT(3) = { ['Pv: ' num2str(recentPerf) ] };
+    SCNT(4) = { ['Pm: ' num2str(recentPerfMicro) ] };
 %     SCNT(2) = { ['N: ' num2str(visHit+microstimHit+microstimMiss) ]};
 %     SCNT(3) = { ['Hit: ' num2str(numHitsElectrode) ] };
 %     SCNT(4) = { ['Miss: ' num2str(numMissesElectrode) ] };

@@ -50,7 +50,7 @@ PREFIXT = 1000; %time to enter fixation window
 
 %REactie tijd
 TARGT = 150; %time to keep fixating after target onset before fix goes green (het liefst 400)
-RACT = 3000;      %reaction time
+RACT = 2500;      %reaction time
 
 %Fix location
 Fsz = FixDotSize.*Par.PixPerDeg;
@@ -94,8 +94,8 @@ while ~Par.ESC
         end
         sampleSize = randi([40 100]);%pixels
         stimSize = 40;%size of target letters, in pixels
-        sampleX = randi([10 60]);%location of sample stimulus, in RF quadrant 150 230
-        sampleY = randi([10 60]);
+        sampleX = randi([5 60]);%location of sample stimulus, in RF quadrant 150 230
+        sampleY = randi([5 60]);
         
         a=100;%sample colours
         b=255;
@@ -111,9 +111,11 @@ while ~Par.ESC
         targetArrayYTracker=[0 0 200 -200];%difference between Cogent and PTB
         allLetters=['EIXT';'OUKV';'SDAZ';'LNYH'];
         allLetters=['IIII';'OOOO';'AAAA';'LLLL'];
+        allLetters=['IIII';'UUUU';'DDDD';'NNNN'];
         %set target & distractor locations
         targetLocation=randi([1 4],1);%select target location
         targetLetterNum=randi([1 4],1);%select target letter
+        targetLetterNum=1;%select target letter
         targetLetter=allLetters(targetLocation,targetLetterNum)
         if repeat==1
             targetLetter=repeatStim
@@ -188,7 +190,8 @@ while ~Par.ESC
     
     degradeVisualStim=0;
     if degradeVisualStim==1%do not generate simulated phosphene at every possible pixel location, but only at a subset of locations
-        numSimPhosphenes=randi([10 20]);%set number of simulated phosphenes/channels comprising visual shape
+%         numSimPhosphenes=randi([10 20]);%set number of simulated phosphenes/channels comprising visual shape
+        numSimPhosphenes=randi([10 15]);%set number of simulated phosphenes/channels comprising visual shape
         pixels=random('unid',numVisLocations,[numSimPhosphenes,1]);%randomly select the pixels at which simulated phosphenes will be visually presented, out of the set of possible locations
         pixels=sort(pixels);
         finalPixelList=listVisualStim(pixels,:);%get final pixel locations
@@ -203,8 +206,8 @@ while ~Par.ESC
     end
     
     %randomly set sizes of 'phosphenes'
-    maxDiameter=20;%pixels
-    minDiameter=10;%pixels
+    maxDiameter=10;%pixels
+    minDiameter=5;%pixels
     diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
     diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
     %factor in scaling of RF sizes across cortex:
@@ -229,7 +232,8 @@ while ~Par.ESC
     % We create a Luminance+Alpha matrix for use as transparency mask:
     % Layer 1 (Luminance) is filled with luminance value 'gray' of the
     % background.
-    phospheneStyle=randi(3);
+%     phospheneStyle=randi(3);
+    phospheneStyle=1;
     for phospheneInd=1:numSimPhosphenes
         ms=floor(radiusSimPhosphenes(phospheneInd));        
         [x,y]=meshgrid(-ms:ms, -ms:ms);
@@ -244,7 +248,17 @@ while ~Par.ESC
         grandMask(xCoords,yCoords,4)=max(grandMask(xCoords,yCoords,4),maskblob);
         phospheneRegion=maskblob~=0;
         if phospheneStyle==1%bright, pretty spots of light
-            phospheneCol=randi(40,[1 3]);
+%             phospheneCol=randi(40,[1 3]);
+            phospheneCol=randi(200,[1 3]);
+            if phospheneCol(1)>100
+                phospheneCol(1)=phospheneCol(1)+55;
+            end
+            if phospheneCol(2)>100
+                phospheneCol(2)=phospheneCol(2)+55;
+            end
+            if phospheneCol(3)>100
+                phospheneCol(3)=phospheneCol(3)+55;
+            end
             for rbgIndex=1:3
                 newPhosphene=phospheneRegion*phospheneCol(rbgIndex);
                 grandMask(xCoords,yCoords,rbgIndex)=grandMask(xCoords,yCoords,rbgIndex)+(uint8(newPhosphene));
@@ -294,14 +308,19 @@ while ~Par.ESC
         
         Time = 1;
         Hit = 0;
-        FIXT=random('unif',400,500);%1000,2300
+%         FIXT=random('unif',400,500);%1000,2300
+        FIXT=300;
         disp(FIXT);
+        durIndividualPhosphene=167;
+        FIXT2=durIndividualPhosphene+600;
         stim_on_flag=0;
-        while Time < FIXT && Hit== 0
+        stim_off_flag=0;
+        while Time < FIXT+FIXT2 && Hit== 0
             %Check for 10 ms
             dasrun(5)
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
-            if Time>floor(FIXT/2)&&stim_on_flag==0
+%             if Time>floor(FIXT/2)&&stim_on_flag==0
+            if Time>FIXT&&stim_on_flag==0
                 % Draw image for current frame:
                 sampleCoords=[screenResX*3/4-size(grandMask,1)/2 screenResY*3/4-size(grandMask,2)/2];
                 destRect=[screenWidth/2+sampleX screenHeight/2+sampleY screenWidth/2+sampleX+visualWidth screenHeight/2+sampleY+visualHeight];
@@ -318,7 +337,16 @@ while ~Par.ESC
                 Screen('Flip', w);
                 stim_on_flag=1;
             end
+            if Time>FIXT+durIndividualPhosphene&&stim_off_flag==0
+                Screen('FillRect',w,grey);
+                Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+                Screen('Flip', w);
+                stim_off_flag=1;
+            end
         end
+        Screen('FillRect',w,grey);
+        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+        Screen('Flip', w);
     else
         Hit = -1; %the subject did not fixate
     end
@@ -362,10 +390,11 @@ while ~Par.ESC
             estimatedTargetLetterSize=stimSize;%in pixels
             Screen('TextSize',w,stimSize);
             Screen('TextStyle',w,0);
-            for i=1:size(allLetters,1)-1
-                Screen('DrawText',w,distLetters(i),screenWidth/2-estimatedTargetLetterSize/2+distx(i),screenHeight/2-estimatedTargetLetterSize/2+disty(i),distcol);
-            end            
+%             for i=1:size(allLetters,1)-1
+%                 Screen('DrawText',w,distLetters(i),screenWidth/2-estimatedTargetLetterSize/2+distx(i),screenHeight/2-estimatedTargetLetterSize/2+disty(i),distcol);
+%             end            
             Screen('DrawText',w,targetLetter,screenWidth/2-estimatedTargetLetterSize/2+targetArrayX(targetLocation),screenHeight/2-estimatedTargetLetterSize/2+targetArrayY(targetLocation),targcol);
+            Screen('DrawText',w,distLetters(oppositeShape),screenWidth/2-estimatedTargetLetterSize/2+distx(oppositeShape),screenHeight/2-estimatedTargetLetterSize/2+disty(oppositeShape),targcol);
             if brightOppositeShape==1
 %                 drawLetter(targcol,distx(oppositeShape),disty(oppositeShape),stimSize,distLetters(oppositeShape))
                 Screen('DrawText',w,distLetters(oppositeShape),screenWidth/2-estimatedTargetLetterSize/2+distx(oppositeShape),screenHeight/2-estimatedTargetLetterSize/2+disty(oppositeShape),targcol);
