@@ -1,7 +1,7 @@
-function runstim_microstim_saccade_attention9(Hnd)
-%Written by Xing 13/7/18
-%Attention task in which the monkey attends to either a phosphene percept
-%or to a visually presented percept on the screen. 
+function runstim_microstim_saccade_attention_phosphenes(Hnd)
+%Written by Xing 1/8/18
+%Attention task in which the monkey attends to a phosphene percept that is
+%located either close to fixation, or further away in the periphery.
 %The two attention conditions are blocked. First, the monkey has to fixate
 %for 300 ms. The target can appear during one of two possible stimulus
 %presentation intervals- immediately at 300 ms, or after a 600-ms interval, at 900 ms.
@@ -9,17 +9,20 @@ function runstim_microstim_saccade_attention9(Hnd)
 %target. I.e. if the target appears at 300 ms, the distractor appears at
 %900 ms, and vice versa (unless a saccade is made, terminating the trial).
 %During the first 20 trials in each block, only a target is presented, 
-%without a distractor. During the attend-microstim block, on the first 20
-%trials, stimulation is delivered through a particular V1 electrode, and no 
-%onscreen visual stimulus is presented. On 50% of trials
-%thereafter, a visual stimulus is presented as well.
-%During the attend-visual task, on the first 20 trials, a visual stimulus
-%is presented, without microstimulation. On 50% of trials
-%thereafter, microstimulation is delivered as well.
+%without a distractor. During the attend-close block, on the first 20
+%trials, stimulation is delivered through a V1 electrode with an RF that is 
+%close to fixation (e.g. array 16), at either 300 or 900 ms, and no 
+%stimulation is delivered through a second electrode. On 50% of trials
+%thereafter, microstimulation is delivered on a second electrode as well
+%(using an array with RFs that are further away from fixation, e.g. array
+%11. 
+%During the attend-far task, on the first 20 trials, microstimulation is
+%delivered on the electrode that elicits a peripheral phosphene. On 50% of trials 
+%thereafter, microstimulation is delivered through the electrode that elicits a nearby phosphene, as well.
 %Simultaneous recording from V4 channels, to check whether attending to a
 %phosphene percept results in modulation of V4 activity.
-%On attend-microstim blocks, the target is a phosphene, whereas on attend-visual blocks, the 
-%target is a visually presented dot. The monkey is required to make
+%On attend-close blocks, the target is a nearby phosphene, whereas on attend-far blocks, the 
+%target is a phosphene that is further away. The monkey is required to make
 %a saccade to the target location, and if correct saccade made, fix
 %spot changes colour and reward is given. No catch trials used.
 %Time allowed to reach target reduced to maximum of 250 ms.
@@ -63,6 +66,10 @@ global allStaircaseResponse
 global missesAtMaxCurrent
 global allDistractTrials
 global allDrummingTrials
+global allCurrentLevel2
+global allElectrodeNum2
+global allInstanceNum2
+global allArrayNum2
 
 format compact
 oldEnableFlag = Screen('Preference', 'SuppressAllWarnings',1);
@@ -167,6 +174,10 @@ allBlockNo=[];
 allElectrodeNum=[];
 allInstanceNum=[];
 allArrayNum=[];
+allCurrentLevel2=[];
+allElectrodeNum2=[];
+allInstanceNum2=[];
+allArrayNum2=[];
 allTargetArrivalTime=[];
 allFalseAlarms=[];
 allHitX=[];
@@ -181,10 +192,13 @@ staircaseFinishedFlag=0;
 trialsDesired=100;
 trialsDesiredInitialBlock=20;
 currentThresholdChs=134;
-electrode=20;
-array=16;
+electrode=34;
+array=12;
+electrode2=4;
+array2=15;
 drumming=1;
-drummingCurrentAmplitudes=[45 45 45 40 35 30 25 20 15 10 5 1];
+drummingCurrentAmplitudes=[15 15 15 10 5 1];
+drummingCurrentAmplitudes2=[15 15 15 10 5 1];
 drummingRecord=[];
 firstTrial=1;
 
@@ -244,7 +258,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
     if distractFirst==0%present target first
         FIXT=300;
     elseif distractFirst==1%present target second
-        FIXT=900;
+        FIXT=600;
     end
     FIXT
     distractT=300;
@@ -256,6 +270,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         FIXTv=FIXT;
     end
     
+    %for target phosphene:
     %Connect to the stimulator
     stimulatorInd=find(arrays==array);
     isconnected=stimulator(stimulatorInd).isConnected();
@@ -321,84 +336,77 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
     finalPixelCoords=[RFx' -RFy'];
     jitterLocation=0;
     
-    %randomly set sizes of 'phosphenes'
-    maxDiameter=5;%pixels
-    minDiameter=5;%pixels   
-    diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
-    diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
-    drummingDiameters=[5 5 5 4 3 2 1];
-    if visualTrial==0%if the distractor is a visually presented dot and there have been several consecutive drumming trials
+    %for distractor phosphene:
+    %Connect to the stimulator
+    stimulatorInd2=find(arrays==array2);
+    isconnected=stimulator(stimulatorInd2).isConnected();
+    disp(['ISconnected? = ' num2str(isconnected)])
+    pause(0.05)%adjust
+    
+    if ~isconnected
+        % compulsory step
+        stimulator(stimulatorInd2).connect
+        pause(0.1)
+    end
+    %select array & electrode index (sorted by lowest to highest impedance) for microstimulation
+    instance2=ceil(array2/2);
+    load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array2),'.mat'])
+    eval(['arrayRFs=array',num2str(array2),';']);
+    electrodeInd2=find(arrayRFs(:,8)==electrode2);
+    RFx2=arrayRFs(electrodeInd2,1);
+    RFy2=arrayRFs(electrodeInd2,2);
+    load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
+    electrodeIndtemp1_2=find(goodArrays8to16(:,8)==electrode2);%matching channel number
+    electrodeIndtemp2_2=find(goodArrays8to16(:,7)==array2);%matching array number
+    electrodeIndCurrent2=intersect(electrodeIndtemp1_2,electrodeIndtemp2_2);%channel number
+    existingThreshold2=goodCurrentThresholds(electrodeIndCurrent2);
+    currentAmplitude2=ceil(existingThreshold2*2.5);
+    if currentAmplitude2>210
+        currentAmplitude2=210;
+    end
+    
+    currentAmplitude2
+    % define a waveform
+    waveform_id2 = 2;
+    if visualTrial==1%if the distractor is a phosphene and there have been several consecutive drumming trials
         if length(drummingRecord)>3
-            if length(drummingRecord)<=length(drummingDiameters)
-                diameterSimPhosphenes=drummingDiameters(length(drummingRecord));
+            if length(drummingRecord)<=length(drummingCurrentAmplitudes2)
+                currentAmplitude2=drummingCurrentAmplitudes2(length(drummingRecord));
             else
-                diameterSimPhosphenes=1;
+                currentAmplitude2=1;
             end
         end
     end
-    %factor in scaling of RF sizes across cortex:
-    sizeScaling=0;
-    if sizeScaling==1
-        diameterSimPhosphenes=diameterSimPhosphenes.*finalPixelCoords(:,1)*2/max(finalPixelCoords(:,1));
-        diameterSimPhosphenes=diameterSimPhosphenes.*finalPixelCoords(:,2)*2/max(finalPixelCoords(:,2));
-        singleQuadrant=1;
-        %when stimulus location is confined to a single quadrant, the size of
-        %phosphenes are expected to range from approximately 11.5 to 36 pixels in diameter.
-        if singleQuadrant==1
-            diameterSimPhosphenes=diameterSimPhosphenes/max(diameterSimPhosphenes)*(36-11.5)+11.5;
-        end
-    end
-    radiusSimPhosphenes=ceil(diameterSimPhosphenes/2);
-    for phospheneInd=1:numSimPhosphenes
-        newPhosphene=[];
-        ms=ceil(radiusSimPhosphenes(phospheneInd));
-        [x,y]=meshgrid(-ms:ms, -ms:ms);
-        
-        % Layer 2 (Transparency aka Alpha) is filled with gaussian transparency
-        % mask.
-        xsd=ms/2.0;
-        ysd=ms/2.0;
-        maskblob=uint8(round(exp(-((x/xsd).^2)-((y/ysd).^2))*255));
-        phospheneRegion=maskblob~=0;
-        phospheneStyle=randi(2);%mixture of dark and light phosphenes
-        phospheneStyle=1;
-        if phospheneStyle==1%light phosphenes
-            phospheneCol=randi(200,[1 3]);
-            if phospheneCol(1)>100
-                phospheneCol(1)=phospheneCol(1)+55;
-            end
-            if phospheneCol(2)>100
-                phospheneCol(2)=phospheneCol(2)+55;
-            end
-            if phospheneCol(3)>100
-                phospheneCol(3)=phospheneCol(3)+55;
-            end
-%             phospheneCol=[0 0 0];
-            for rbgIndex=1:3
-                newPhosphene(:,:,rbgIndex)=uint8(phospheneRegion*phospheneCol(rbgIndex));
-            end
-        elseif phospheneStyle==2%dark phosphenes
-            phospheneCol=randi(100,[1 3]);
-            %                 phospheneCol=[0 0 0];
-            for rbgIndex=1:3
-                newPhosphene(:,:,rbgIndex)=uint8(phospheneRegion*phospheneCol(rbgIndex));
-            end
-        end
-        newPhosphene(:,:,4)=maskblob;
-        newPhosphenes{phospheneInd}=newPhosphene;
-        masktex(phospheneInd)=Screen('MakeTexture', w, newPhosphene);
-    end
+    numPulses2=50;%originally set to 5 pulses
+    %         amplitude=50;%set current level in uA
+    stimulator(stimulatorInd2).setStimPattern('waveform',waveform_id2,...
+        'polarity',0,...
+        'pulses',numPulses2,...
+        'amp1',currentAmplitude2,...
+        'amp2',currentAmplitude2,...
+        'width1',170,...
+        'width2',170,...
+        'interphase',60,...
+        'frequency',300);
+    %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
+    
+    visRFx=RFx2;%the distractor and target RFs lie in the same quadrant
+    visRFy=RFy2;
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
         %just redo with current settings
     else
-        if visualTrial==1%visual trial
+        if visualTrial==1%attend-far trial
 %             visRFx=randi(60)-140;
             sampleX=visRFx;
             sampleY=visRFy;
-        elseif visualTrial==0
+            sampleX2 = RFx;%location of sample stimulus, in RF quadrant 150 230
+            sampleY2 = RFy;
+        elseif visualTrial==0%attend-near trial
             sampleX = RFx;%location of sample stimulus, in RF quadrant 150 230
             sampleY = RFy;
+            sampleX2=visRFx;
+            sampleY2=visRFy;
         end
         eccentricity=sqrt(sampleX^2+sampleY^2)
         if eccentricity<Par.PixPerDeg
@@ -406,36 +414,36 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         elseif eccentricity<2*Par.PixPerDeg
             TargWinSz = 1.5;
         elseif eccentricity<3*Par.PixPerDeg
-            TargWinSz = 3.5;
-        elseif eccentricity<4*Par.PixPerDeg
-            TargWinSz = 4.5;
-        elseif eccentricity<5*Par.PixPerDeg
-            TargWinSz = 6;
-        elseif eccentricity<6*Par.PixPerDeg
-            TargWinSz = 7;
-        elseif eccentricity<7*Par.PixPerDeg
-            TargWinSz = 8;
+            TargWinSz = 2.5;
         else
-            TargWinSz=8;
+            TargWinSz=3.5;
+        end
+        
+        eccentricity2=sqrt(sampleX2^2+sampleY2^2)
+        if eccentricity2<Par.PixPerDeg
+            DistWinSz2 = 1;
+        elseif eccentricity2<2*Par.PixPerDeg
+            DistWinSz2 = 1.5;
+        elseif eccentricity2<3*Par.PixPerDeg
+            DistWinSz2 = 2.5;
+        else
+            DistWinSz2=3.5;
         end
 %             sampleX = 170;%arbitrarily large target window
 %             sampleY = 170;%arbitrarily large target window
 %             TargWinSz=17;
         %control window setup
         if initialTrial==1%only show target
-                WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
-                    sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2]; ...  %2: target;
+            WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
+                sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];%2: target;
         elseif initialTrial==0
-            if distractFirst==0
-%                 WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
-%                     sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2]; ...  %2: target;
-            WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
-                sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2; ...  %2: target;
-                -sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 1];%1: error
-            elseif distractFirst==1
-            WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
-                sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2; ...  %2: target;
-                -sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 1];%1: error
+            if visualTrial==1
+                WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
+                    sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];  %2: target; do not have a distractor window, so that saccade can be made to target window
+            elseif visualTrial==0
+                WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
+                    sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2; ...  %2: target;
+                    sampleX2,  sampleY2, Par.PixPerDeg*DistWinSz2, Par.PixPerDeg*DistWinSz2, 1];%1: error
             end
         end
         Par.WIN = WIN';
@@ -488,20 +496,16 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
             if distractFirst==1&&initialTrial==0
                 dasbit(Par.StimB,1);%send the trigger signal
-                if visualTrial==1%visual trial
+                if visualTrial==1%attend-far trial
                     if Time>=distractT&&distractFlagOnM==0%turn on the phosphene distractor
                         %deliver microstimulation
                         stimulator(stimulatorInd).manualStim(electrode,waveform_id)
                         distractFlagOnM=1;
                     end
-                elseif visualTrial==0
+                elseif visualTrial==0%attend-near trial
                     if Time>=distractT&&distractFlagOnV==0%turn on the visual distractor
-                        for phospheneInd=1:numSimPhosphenes
-                            destRect=[screenWidth/2+visRFx(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+visRFx(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
-                            Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
-                            Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
-                        end
-                        Screen('Flip', w);
+                        %deliver microstimulation
+                        stimulator(stimulatorInd2).manualStim(electrode2,waveform_id2)
                         distractFlagOnV=1;
                     end
                 end
@@ -524,25 +528,17 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         stimFlag2=1;
         stimOffFlag=0;
         dasbit(Par.TargetB, 1);
-        if visualTrial==1&&stimFlag2==1%visual trial
-            %draw line composed of series of simulated phosphenes
-            for phospheneInd=1:numSimPhosphenes
-                destRect=[screenWidth/2+visRFx(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+visRFx(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
-                Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
-                Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
-            end
-            Screen('Flip', w);
-            stimFlag2=0;
+        if visualTrial==1&&stimFlag2==1%attend-far trial
+            %deliver microstimulation to target electrode
             tic
-            takeScreenshot=0;
-            if takeScreenshot==1
-                imageArray = Screen('GetImage', w, [0 0 screenResX screenResY]);
-                %imwrite is a Matlab function, not a PTB-3 function
-                imageName=[visStimDir,'\newPhosphene_trial',num2str(trialNo),'.jpg'];
-                imwrite(imageArray,imageName)
+            stimulator(stimulatorInd2).manualStim(electrode2,waveform_id2)
+            if length(my_devices)>1
+                %disconnect CereStim
+                stimulator(stimulatorInd2).disconnect;
             end
-        elseif visualTrial==0&&stimFlag==1
-            %deliver microstimulation
+            stimFlag2=0;
+        elseif visualTrial==0&&stimFlag==1%attend-near trial
+            %deliver microstimulation to target electrode
             tic
             stimulator(stimulatorInd).manualStim(electrode,waveform_id)
             if length(my_devices)>1
@@ -570,8 +566,21 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
                 end
             end
             if Hit==2
+                WIN = [sampleX,  sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 0];%2: set the target to become the new fixation window
+                Par.WIN = WIN';
+%                 refreshtracker(1) %for your control display
+                SetWindowDas      %for the dascard
+                dasreset(1);     %set test parameters for exiting fix window (to determine how long his gaze stayed on the targer)
+                Hit2 = 0;
+                Time2 = 0;                
+                while Time2 < 20 && Hit2 <= 0  %RACT = time to respond to microstim (reaction time)
+                    %Check for 5 ms
+                    dasrun(5)
+                    [Hit2 Time2] = DasCheck;
+                end
                 Screen('FillOval',w,[0 255 255],[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
                 Screen('Flip', w);
+                Hit2
             elseif Hit <= 0%did not make saccade to correct location
             end
 %         else
@@ -595,7 +604,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         set(HP, 'Marker', '+', 'MarkerSize', 20, 'MarkerEdgeColor', 'm')
         
         performance(trialNo)=0;
-        if Hit == 2 &&LPStat(5) < Times.Sacc %correct target, give juice
+        if Hit == 2 && LPStat(5) < Times.Sacc && Hit2==0 %correct target, stayed within target window for at least 100 ms, give juice
             dasbit(  Par.CorrectB, 1);
             dasjuice(5.1);
             Par.Corrcount = Par.Corrcount + 1; %log correct trials
@@ -683,12 +692,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
             %deliver microstimulation
             stimulator(stimulatorInd).manualStim(electrode,waveform_id)
         elseif visualTrial==0
-            for phospheneInd=1:numSimPhosphenes
-                destRect=[screenWidth/2+visRFx(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+visRFx(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
-                Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
-                Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
-            end
-            Screen('Flip', w);
+            %deliver microstimulation
+            stimulator(stimulatorInd2).manualStim(electrode2,waveform_id2)
         end
         dasreset(2); %check target window enter
         refreshtracker(3) %set fix point to green
@@ -760,6 +765,10 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
     allElectrodeNum{trialNo}=electrode;
     allInstanceNum{trialNo}=instance;
     allArrayNum{trialNo}=array;
+    allCurrentLevel2(trialNo)=currentAmplitude2;
+    allElectrodeNum2{trialNo}=electrode2;
+    allInstanceNum2{trialNo}=instance2;
+    allArrayNum2{trialNo}=array2;
     allTargetArrivalTime(trialNo)=Time;
     allFalseAlarms(trialNo)=falseAlarm;
     allAttentionCond(trialNo)=visualTrial;

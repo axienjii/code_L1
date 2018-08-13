@@ -3,7 +3,7 @@ function current_thresholds_over_time
 %Reads in current threshold levels and plots the values across time, for
 %each channel.
 allThresholds=[];
-for sessionInd=87:125%1:84
+for sessionInd=87:134%87:125%1:84%from 84 onwards, used larger set of electrodes for stimulation (300 instead of 201). refined set of electrodes from 87 onwards
     load(['C:\Users\Xing\Lick\currentThresholds_previous\currentThresholdChs',num2str(sessionInd),'.mat']);
     allThresholds=[allThresholds goodCurrentThresholds];
 end
@@ -60,11 +60,13 @@ stdChSorted=stdCh(indSort);
 errorbar(1:length(meanChSorted),meanChSorted,stdChSorted);
 xlabel('channel number, sorted')
 ylabel('mean current threshold & SD (uA)')
-title('mean current thresholds on individual channels, over 5/3/18 - 9/5/18')
+% title('mean current thresholds on individual channels, over 5/3/18 - 9/5/18')
+title('mean current thresholds on individual channels, over 5/3/18 - 24/7/18')
 xlim([0 300])
 figure;%box plot for size of standard deviation
 boxplot(stdChSorted);
-title('size of standard deviation on individual channels, over 5/3/18 - 9/5/18')
+% title('size of standard deviation on individual channels, over 5/3/18 - 9/5/18')
+title('size of standard deviation on individual channels, over 5/3/18 - 24/7/18')
 
 %identify channels with large SD values:
 largeSDchs=find(stdCh>10);
