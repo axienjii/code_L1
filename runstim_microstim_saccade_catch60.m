@@ -652,7 +652,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         Hit = 0;
         FIXT2=400;
         stimFlag2=1;
-        while Time < FIXT2 && Hit== 0
+        while Time <  && Hit== 0
             %Check for 10 ms
             dasrun(5)
             [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,

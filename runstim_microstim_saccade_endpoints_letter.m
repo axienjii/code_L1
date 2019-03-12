@@ -2,6 +2,9 @@ function runstim_microstim_saccade_endpoints_letter(Hnd)
 %Written by Xing 18/5/18
 %Check saccade endpoints for electrodes comprising two sets of the letter
 %'O' (180518_B2) or the letters 'A' and 'L' (230518). Interleave electrode identity from trial to trial. 
+%Can also be used for saccade task in which electrodes are randomly
+%selected on each of 9 arrays (8 to 16), as is done by the script,
+%'select_random_electrodes_arrays.m,' from 17/9/18.
 
 global Par   %global parameters
 global trialNo
@@ -101,7 +104,8 @@ else
 end
 
 arrays=8:16;
-stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+% stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+stimulatorNums=[14295 65372 14173 65374 65375 65376 65493 14305 65338];%stimulator to which each array is connected
 
 %Create stimulator object
 for deviceInd=1:length(stimulatorNums)
@@ -148,18 +152,14 @@ allHitRT=[];
 
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
-trialsDesired=50;
-currentThresholdChs=126;
-electrodeNums=[50 58 55 53 30 10 49 46 24 38 42 28 1 27 5 44 29 13 20 1 8 28 49 32 53 55 46 4 60 56];%170518_B & B?
-arrayNums=[12 14 14 16 16 8 10 15 13 10 10 10 10 9 9 12 14 14 16 8 15 15 15 13 13 10 10 10 10 9];
-% electrodeNums=[60 34 50 37 4 1 16 15 51 52 63 5 56 35 36 55 55 48 22 62];%010518_B & B
-% arrayNums=[10 10 13 15 15 15 11 10 11 13 15 15 13 13 13 10 11 11 11 11];
+trialsDesired=20;
+currentThresholdChs=139;%126
+electrodeNums=[62 48 47 32 61 64 43 62 63 40 27 52 1 47 6 14 12];
+arrayNums=[13 13 13 13 10 11 13 15 15 15 8 8 9 16 12 12 14];
 % electrodeNums=[setElectrodes{1} setElectrodes{2} setElectrodes{3} setElectrodes{4}];
 % arrayNums=[setArrays{1} setArrays{2} setArrays{3} setArrays{4}];
 % electrodeNums=electrodeNums(10:end);
 % arrayNums=arrayNums(10:end);
-% electrodeNums=[];
-% arrayNums=[];
 % tryDifferentCurrents=[];
 tryDifferentCurrents=[];
 uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
@@ -170,7 +170,7 @@ electrodeNumInd=1;
 array=arrayNums(electrodeOrder(1));
 electrode=electrodeNums(electrodeOrder(1));
 firstTrial=1;
-visualOnly=1;
+visualOnly=0;
 while ~Par.ESC&&numHitsElectrode+numMissesElectrode<=trialsDesired*length(electrodeNums)
     %Pretrial
     trialNo = trialNo+1;
@@ -303,8 +303,8 @@ while ~Par.ESC&&numHitsElectrode+numMissesElectrode<=trialsDesired*length(electr
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
             highImpedanceChs=0;%set to 1 for current thresholding on electrodes that are not typically used for microstimulation due to high thresholds
             if highImpedanceChs==0
-                electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
-                electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
+                electrodeIndtemp1=find(goodArrays8to16New(:,8)==electrode);%matching channel number
+                electrodeIndtemp2=find(goodArrays8to16New(:,7)==array);%matching array number
                 electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
                 existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
                 currentInd=find(finalCurrentVals<=1.5*existingThreshold);
@@ -364,9 +364,13 @@ while ~Par.ESC&&numHitsElectrode+numMissesElectrode<=trialsDesired*length(electr
             else
                 TargWinSz=8;
             end
-            sampleX = 108;%arbitrarily large target window
-            sampleY = 73;%arbitrarily large target window
-            TargWinSz=8;%17
+%             sampleX = 108;%arbitrarily large target window
+%             sampleY = 73;%arbitrarily large target window
+%             TargWinSz=8;%17            
+            sampleX = 170;%arbitrarily large target window
+            sampleY = 170;%arbitrarily large target window
+            TargWinSz=17;
+
         end
         %control window setup
         if catchTrial==1

@@ -180,11 +180,11 @@ allDrummingTrials=[];
 
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
-trialsDesired=100;
-trialsDesiredInitialBlock=20;
-currentThresholdChs=133;
-electrode=34;
-array=11;
+trialsDesired=50;%50
+trialsDesiredInitialBlock=30;%30
+currentThresholdChs=134;
+electrode=20;
+array=16;
 drumming=1;
 drummingCurrentAmplitudes=[10 10 10 8 6 4 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 drummingRecord=[];
@@ -366,7 +366,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
             if phospheneCol(3)>100
                 phospheneCol(3)=phospheneCol(3)+55;
             end
-%             phospheneCol=[0 0 0];
+            phospheneCol=[0 0 0];
             for rbgIndex=1:3
                 newPhosphene(:,:,rbgIndex)=uint8(phospheneRegion*phospheneCol(rbgIndex));
             end
@@ -474,6 +474,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         Hit = 0;
         distractFlagOnM=0;
         distractFlagOnV=0;
+        stimOffFlag2=0;
 %         disp(FIXT);
         while Time < FIXT && Hit== 0
             %Check for 10 ms
@@ -491,6 +492,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
                         Screen('Flip', w);
                         distractFlagOnM=1;
                     end
+                    if Time>=distractT+durIndividualPhosphene&&stimOffFlag2==0
+                        Screen('FillRect',w,grey);
+                        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+                        Screen('Flip', w);
+                        stimOffFlag2=1;
+                    end
                 elseif visualTrial==0%distractor visual stimulus in the left hemifield
                     if Time>=distractT&&distractFlagOnV==0%turn on the visual distractor
                         for phospheneInd=1:numSimPhosphenes
@@ -500,6 +507,12 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
                         end
                         Screen('Flip', w);
                         distractFlagOnV=1;
+                    end
+                    if Time>=distractT+durIndividualPhosphene&&stimOffFlag2==0
+                        Screen('FillRect',w,grey);
+                        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+                        Screen('Flip', w);
+                        stimOffFlag2=1;
                     end
                 end
             end
@@ -586,7 +599,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         performance(trialNo)=0;
         if Hit == 2 &&LPStat(5) < Times.Sacc %correct target, give juice
             dasbit(  Par.CorrectB, 1);
-            dasjuice(5.1);
+%             dasjuice(5.1);
+            dasjuice(6);
             Par.Corrcount = Par.Corrcount + 1; %log correct trials
             % beep
             

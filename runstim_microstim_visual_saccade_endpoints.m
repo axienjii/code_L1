@@ -1,16 +1,12 @@
-function runstim_microstim_saccade_catch_batch_new_impedances(Hnd)
-%Written by Xing 05/12/17
-%Determine microstimulation thresholds for electrodes on which monkey
-%reliably reports phosphene percept.
-%On 50% of trials, deliver microstimulation (10 pulses). Monkey has to fixate for 300 ms, followed by
-%an interval lasting anywhere from 0 to 400 ms. Monkey is required to make
-%a saccade to RF location, and if correct saccade made, then at 100 ms, fix
-%spot changes colour and reward given. On the other 50% of trials, no microstim
-%administered, and monkey is rewarded for maintaining fixation after 1000 ms.
-%Time allowed to reach target reduced to maximum of 200 ms.
-%This version of script uses newly identified list of channels with impedances of 150
-%kOhms or lower (as measured on 28/2/18), and combines it with previous
-%list of 201 channels, to obtain 371 channels in total.
+function runstim_microstim_visual_saccade_endpoints(Hnd)
+%Written by Xing 25/9/18, modified from
+%runstim_microstim_saccade_endpoints_letter.m.
+%Check saccade endpoints for randomly selected electrodes (5 per arrays,
+%for each of 9 arrays- arrays 8 to 16), selected by script,
+%'select_random_electrodes_arrays.m,' from 17/9/18. Interleave electrode identity from trial to trial.  
+%Difference with previous function is that this script has equal number of
+%visual trials, where visual version of phosphene is presented, and smaller target
+%window is used.
 
 global Par   %global parameters
 global trialNo
@@ -33,6 +29,7 @@ global allElectrodeNum
 global allInstanceNum
 global allArrayNum
 global allTargetArrivalTime
+global allVisualTrial
 global currentAmplitude
 global visualHit
 global microstimHit
@@ -110,8 +107,8 @@ else
 end
 
 arrays=8:16;
-% stimulatorNums=[14305 65372 65377 14173 65375 65376 65493 65494 65338];%stimulator to which each array is connected
-stimulatorNums=[14335 65372 14173 65374 65375 65376 65493 65505 65338];%stimulator to which each array is connected
+% stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+stimulatorNums=[14295 65372 14173 65374 65375 65376 65493 14305 65338];%stimulator to which each array is connected
 
 %Create stimulator object
 for deviceInd=1:length(stimulatorNums)
@@ -155,37 +152,26 @@ allFalseAlarms=[];
 allHitX=[];
 allHitY=[];
 allHitRT=[];
+allVisualTrial=[];
 
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
-trialsDesired=15;
-currentThresholdChs=138;
-% electrodeNums=[setElectrodes{1} setElectrodes{2} setElectrodes{3} setElectrodes{4}];
-% arrayNums=[setArrays{1} setArrays{2} setArrays{3} setArrays{4}];
-% electrodeNums=[setElectrodes{1} setElectrodes{2}];
-% arrayNums=[setArrays{1} setArrays{2}];
-% electrodeNums=electrodeNums(10:end);
-% arrayNums=arrayNums(10:end);
-% electrodeNums=[52 9 27 11 22 36 44 19 56 1 46 40 28 41 34 51 64 18 32 34 6 20 14 12 30 35 52 22 43 31 31 12 13 6 36 1 37 40 62 63 47 34 4 53 46];%010518_B & B
-% arrayNums=[8 8 8 8 8 9 9 9 9 9 10 10 10 10 10 11 11 11 11 11 12 12 12 12 12 13 13 13 13 13 14 14 14 14 14 15 15 15 15 15 16 16 16 16 16];
-% electrodeNums=[52 9 27 11 22 36 44 19 56 1 46 40 28 41 34 51 64 18 32 34 6 20 14 12 30 35 52 22 43 31 31 12 13 6 36 1 37 40 62 63 47 34 4 53 46];%010518_B & B
-% arrayNums=[8 8 8 8 8 9 9 9 9 9 10 10 10 10 10 11 11 11 11 11 12 12 12 12 12 13 13 13 13 13 14 14 14 14 14 15 15 15 15 15 16 16 16 16 16];
-electrodeNums=[45 29 35 43 18];
-arrayNums=[10 10 10 10 11];
-% highSDChs=[12 13 14 17 19 26 29 30 34 35 39 40];
-% highSDChs=[17 19 26 29 30 34 35 39 40];
-% electrodeNums=electrodeNums(23:end);
-% arrayNums=arrayNums(23:end);
-% tryDifferentCurrents=[];
-tryDifferentCurrents=[100 50 25 40 30 45];
-uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
-electrodeNums=uniqueInd(:,1);
-arrayNums=uniqueInd(:,2);
+trialsDesired=20;
+currentThresholdChs=136;%126
+% electrodeNums=[50 58 55 53 30 10 49 46 24 38 42 28 1 27 5 44 29 13 20 1 8 28 49 32 53 55 46 4 60 56];%170518_B & B?
+% arrayNums=[12 14 14 16 16 8 10 15 13 10 10 10 10 9 9 12 14 14 16 8 15 15 15 13 13 10 10 10 10 9];
+electrodeNums=[52 9 27 11 22 36 44 19 56 1 46 40 28 41 34 51 64 18 32 34 6 20 14 12 30 35 52 22 43 31 31 12 13 6 36 1 37 40 62 63 47 34 4 53 46];%010518_B & B
+arrayNums=[8 8 8 8 8 9 9 9 9 9 10 10 10 10 10 11 11 11 11 11 12 12 12 12 12 13 13 13 13 13 14 14 14 14 14 15 15 15 15 15 16 16 16 16 16];
+visualTrials=[zeros(1,length(electrodeNums)) ones(1,length(electrodeNums))];
+electrodeNums=[electrodeNums electrodeNums];
+arrayNums=[arrayNums arrayNums];
+tryDifferentCurrents=[];
+electrodeOrder=randperm(length(electrodeNums));
 electrodeNumInd=1;
-array=arrayNums(electrodeNumInd);
-electrode=electrodeNums(electrodeNumInd);
-firstTrial=1;
-while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
+array=arrayNums(electrodeOrder(1));
+electrode=electrodeNums(electrodeOrder(1));
+visualOnly=visualTrials(electrodeOrder(1));
+while ~Par.ESC&&numHitsElectrode+numMissesElectrode<=trialsDesired*length(electrodeNums)
     %Pretrial
     trialNo = trialNo+1;
     if trialNo==1
@@ -220,8 +206,9 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         falseAlarm=0;
     elseif catchTrial==0
         FIXT=random('unif',300,900);%
-        array=arrayNums(electrodeNumInd);
-        electrode=electrodeNums(electrodeNumInd);
+        array=arrayNums(electrodeOrder(electrodeNumInd));
+        electrode=electrodeNums(electrodeOrder(electrodeNumInd));
+        visualOnly=visualTrials(electrodeOrder(electrodeNumInd));
         %Connect to the stimulator
         stimulatorInd=find(arrays==array);
         isconnected=stimulator(stimulatorInd).isConnected();
@@ -237,12 +224,84 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         
         %select array & electrode index (sorted by lowest to highest impedance) for microstimulation        
         instance=ceil(array/2);
-        load(['C:\Users\Xing\Lick\090817_impedance\array',num2str(array),'.mat'])
-        eval(['arrayRFs=array',num2str(array),';']);
-        electrodeInd=find(arrayRFs(:,8)==electrode);
-        RFx=arrayRFs(electrodeInd,1);
-        RFy=arrayRFs(electrodeInd,2);
-        if staircaseFinishedFlag==1||firstTrial==1
+        load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat'])
+        electrodeInd=find(goodArrays8to16New(:,8)==electrode);
+        arrayInd=find(goodArrays8to16New(:,7)==array);
+        electrodeArrayInd=intersect(electrodeInd,arrayInd);
+        RFx=goodArrays8to16New(electrodeArrayInd,1);
+        RFy=goodArrays8to16New(electrodeArrayInd,2);
+        if visualOnly==1%visual trial
+            visRFx=RFx;%locations of visual stimuli
+            visRFy=RFy;
+            numSimPhosphenes=length(electrode);
+            finalPixelCoords=[RFx' -RFy'];
+            jitterLocation=0;
+            if jitterLocation==1
+                %         finalPixelCoords=finalPixelCoords+random('unid',floor(spacing/2),[1,numSimPhosphenes]);%randomise position of phosphene within each 'pixel'
+                %         finalPixelCoords2=random('unid',floor(spacing/2),[1,numSimPhosphenes]);
+                maxJitterSize=5;
+                finalPixelCoords=finalPixelCoords+random('unid',maxJitterSize,[numSimPhosphenes,numSimPhosphenes]);%randomise position of phosphene within each 'pixel'
+            end
+            
+            %randomly set sizes of 'phosphenes'
+            maxDiameter=15;%pixels
+            minDiameter=15;%pixels
+            diameterSimPhosphenes=random('unid',maxDiameter-minDiameter+1,[numSimPhosphenes,1]);
+            diameterSimPhosphenes=diameterSimPhosphenes+minDiameter-1;
+            %factor in scaling of RF sizes across cortex:
+            sizeScaling=0;
+            if sizeScaling==1
+                diameterSimPhosphenes=diameterSimPhosphenes.*finalPixelCoords(:,1)*2/max(finalPixelCoords(:,1));
+                diameterSimPhosphenes=diameterSimPhosphenes.*finalPixelCoords(:,2)*2/max(finalPixelCoords(:,2));
+                singleQuadrant=1;
+                %when stimulus location is confined to a single quadrant, the size of
+                %phosphenes are expected to range from approximately 11.5 to 36 pixels in diameter.
+                if singleQuadrant==1
+                    diameterSimPhosphenes=diameterSimPhosphenes/max(diameterSimPhosphenes)*(36-11.5)+11.5;
+                end
+            end
+            radiusSimPhosphenes=ceil(diameterSimPhosphenes/2);
+            for phospheneInd=1:numSimPhosphenes
+                newPhosphene=[];
+                ms=ceil(radiusSimPhosphenes(phospheneInd));
+                [x,y]=meshgrid(-ms:ms, -ms:ms);
+                
+                % Layer 2 (Transparency aka Alpha) is filled with gaussian transparency
+                % mask.
+                xsd=ms/2.0;
+                ysd=ms/2.0;
+                maskblob=uint8(round(exp(-((x/xsd).^2)-((y/ysd).^2))*255));
+                phospheneRegion=maskblob~=0;
+                phospheneStyle=randi(2);%mixture of dark and light phosphenes
+                phospheneStyle=1;
+                if phospheneStyle==1%light phosphenes
+                    phospheneCol=randi(200,[1 3]);
+                    if phospheneCol(1)>100
+                        phospheneCol(1)=phospheneCol(1)+55;
+                    end
+                    if phospheneCol(2)>100
+                        phospheneCol(2)=phospheneCol(2)+55;
+                    end
+                    if phospheneCol(3)>100
+                        phospheneCol(3)=phospheneCol(3)+55;
+                    end
+%                                     phospheneCol=[0 0 0];
+                                    phospheneCol=[255 255 255];
+                    for rbgIndex=1:3
+                        newPhosphene(:,:,rbgIndex)=uint8(phospheneRegion*phospheneCol(rbgIndex));
+                    end
+                elseif phospheneStyle==2%dark phosphenes
+                    phospheneCol=randi(100,[1 3]);
+                    %                 phospheneCol=[0 0 0];
+                    for rbgIndex=1:3
+                        newPhosphene(:,:,rbgIndex)=uint8(phospheneRegion*phospheneCol(rbgIndex));
+                    end
+                end
+                newPhosphene(:,:,4)=maskblob;
+                newPhosphenes{phospheneInd}=newPhosphene;
+                masktex(phospheneInd)=Screen('MakeTexture', w, newPhosphene);
+            end
+        elseif visualOnly==0
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
             highImpedanceChs=0;%set to 1 for current thresholding on electrodes that are not typically used for microstimulation due to high thresholds
             if highImpedanceChs==0
@@ -259,62 +318,69 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
                 currentInd=find(finalCurrentVals<=30);
             end
             currentInd=currentInd(end);
-            firstTrial=0;
-            staircaseFinishedFlag=0;
+            currentAmplitude=existingThreshold*2.5;%instead of varying current, use same current level as that found during previous thresholding sessions
+            if currentAmplitude>210
+                currentAmplitude=210;
+            end
+            % define a waveform
+            waveform_id = 1;
+            numPulses=50;%originally set to 5 pulses
+            %         amplitude=50;%set current level in uA
+            stimulator(stimulatorInd).setStimPattern('waveform',waveform_id,...
+                'polarity',0,...
+                'pulses',numPulses,...
+                'amp1',currentAmplitude,...
+                'amp2',currentAmplitude,...
+                'width1',170,...
+                'width2',170,...
+                'interphase',60,...
+                'frequency',300);
+            %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
         end
-        currentAmplitude=finalCurrentVals(currentInd);
-        % define a waveform
-        waveform_id = 1;
-        numPulses=50;%originally set to 5 pulses
-        %         amplitude=50;%set current level in uA
-        stimulator(stimulatorInd).setStimPattern('waveform',waveform_id,...
-            'polarity',0,...
-            'pulses',numPulses,...
-            'amp1',currentAmplitude,...
-            'amp2',currentAmplitude,...
-            'width1',170,...
-            'width2',170,...
-            'interphase',60,...
-            'frequency',300);
-        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
     end
     
     if Par.Drum && Hit ~= 2 %if drumming and this was an error trial
         %just redo with current settings
     else
-        if currentAmplitude==0
+        if catchTrial==1
             sampleX=NaN;
             sampleY=NaN;
-        elseif currentAmplitude>0
+        elseif catchTrial==0
             sampleX = RFx;%location of sample stimulus, in RF quadrant 150 230
             sampleY = -RFy;
             eccentricity=sqrt(sampleX^2+sampleY^2)
             if eccentricity<Par.PixPerDeg
                 TargWinSz = 1;
             elseif eccentricity<2*Par.PixPerDeg
-                TargWinSz = 1.5;
+                TargWinSz = 2;
             elseif eccentricity<3*Par.PixPerDeg
-                TargWinSz = 3.5;
+                TargWinSz = 3;
             elseif eccentricity<4*Par.PixPerDeg
-                TargWinSz = 4.5;
+                TargWinSz = 4;
             elseif eccentricity<5*Par.PixPerDeg
-                TargWinSz = 6;
+                TargWinSz = 5;
             elseif eccentricity<6*Par.PixPerDeg
-                TargWinSz = 7;
+                TargWinSz = 6;
             elseif eccentricity<7*Par.PixPerDeg
-                TargWinSz = 8;
+                TargWinSz = 7;
             else
                 TargWinSz=8;
             end
-            sampleX = 170;%arbitrarily large target window
-            sampleY = 170;%arbitrarily large target window
-            TargWinSz=17;
+%             sampleX = 108;%arbitrarily large target window
+%             sampleY = 73;%arbitrarily large target window
+%             TargWinSz=8;%17  
+            if visualOnly==0%use large target window for microstim trial          
+                sampleX = 170;%arbitrarily large target window
+                sampleY = 170;%arbitrarily large target window
+                TargWinSz=17;
+            end
+
         end
         %control window setup
-        if currentAmplitude==0
+        if catchTrial==1
             WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
                 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 2];  %2: target;
-        elseif currentAmplitude>0
+        elseif catchTrial==0
             WIN = [ 0,  0, Par.PixPerDeg*FixWinSz, Par.PixPerDeg*FixWinSz, 0; ... %Fix
                 sampleX,  -sampleY, Par.PixPerDeg*TargWinSz, Par.PixPerDeg*TargWinSz, 2];
         end
@@ -375,14 +441,54 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
     
     %///////// EVENT 2 DISPLAY TARGET(S) //////////////////////////////////////
     if Hit == 0 %subject kept fixation, display stimulus
-        if currentAmplitude==0%catch trial
-            %do nothing
-        elseif currentAmplitude>0
-            %deliver microstimulation
-            stimulator(stimulatorInd).manualStim(electrode,waveform_id)
-            if length(my_devices)>1
-                %disconnect CereStim
-                stimulator(stimulatorInd).disconnect;
+        if catchTrial==0&&visualOnly==1
+            dasreset(1);     %set test parameters for exiting fix window
+            Time = 1;
+            Hit = 0;
+            stimFlag2=1;
+            %         disp(FIXT);
+            if visualOnly==1
+                durIndividualPhosphene=100;
+            elseif visualOnly==0
+                durIndividualPhosphene=167;
+            end
+            while Time < durIndividualPhosphene && Hit== 0
+                %Check for 10 ms
+                dasrun(5)
+                [Hit Time] = DasCheck; %retrieve eye channel buffer and events, plot eye motion,
+                %draw line composed of series of simulated phosphenes
+                if Time>=0&&stimFlag2==1
+                    for phospheneInd=1:numSimPhosphenes
+                        destRect=[screenWidth/2+visRFx(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)-ceil(diameterSimPhosphenes(phospheneInd)/2) screenWidth/2+visRFx(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2) screenHeight/2-visRFy(phospheneInd)+ceil(diameterSimPhosphenes(phospheneInd)/2)];
+                        Screen('DrawTexture',w, masktex(phospheneInd), [], destRect);
+                        Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);%fixspot
+                        stimFlag2=0;
+                    end
+                    Screen('Flip', w);
+                    dasbit(Par.StimB,1);%send the trigger signal
+                    tic
+                    takeScreenshot=0;
+                    if takeScreenshot==1
+                        imageArray = Screen('GetImage', w, [0 0 screenResX screenResY]);
+                        %imwrite is a Matlab function, not a PTB-3 function
+                        imageName=[visStimDir,'\newPhosphene_trial',num2str(trialNo),'.jpg'];
+                        imwrite(imageArray,imageName)
+                    end
+                end
+                Screen('FillRect',w,grey);
+                Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+                Screen('Flip', w);
+            end
+        elseif catchTrial==0&&visualOnly==0
+            if currentAmplitude==0&&visualOnly==0%catch trial
+                %do nothing
+            elseif currentAmplitude>0||visualOnly==1
+                %deliver microstimulation
+                stimulator(stimulatorInd).manualStim(electrode,waveform_id)
+                if length(my_devices)>1
+                    %disconnect CereStim
+                    stimulator(stimulatorInd).disconnect;
+                end
             end
         end
         dasbit(  Par.TargetB, 1);
@@ -392,7 +498,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         if Hit == 0 %subject kept fixation, subject may make an eye movement
             dasreset(2); %check target window  enter
             refreshtracker(3) %set fix point to green
-            if currentAmplitude==0%catch trial
+            if catchTrial==1%catch trial
                 Time = 0;
                 Hit = 0;
                 Screen('FillOval',w,[0 255 0],[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
@@ -402,7 +508,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
                     dasrun(5)
                     [Hit Time] = DasCheck;
                 end                
-            elseif currentAmplitude>0                
+            elseif catchTrial==0            
                 Time = 0;
                 while Time < RACT && Hit <= 0  %RACT = time to respond to microstim (reaction time)
                     %Check for 5 ms
@@ -458,10 +564,15 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
             hitX=LPStat(3);%hit x position
             hitY=LPStat(4);%hit y position
             hitRT=LPStat(5);%RT
-            if currentAmplitude==0%catch trial 
+            electrodeNumInd=electrodeNumInd+1;
+            if electrodeNumInd>length(electrodeNums)
+                electrodeNumInd=1;
+                electrodeOrder=randperm(length(electrodeNums));
+            end
+            if catchTrial==1%catch trial 
                 fprintf('Trial %3d (catch) is completed\n',trialNo);
                 catchHit=catchHit+1;
-            elseif currentAmplitude>0
+            elseif catchTrial==0
                 fprintf('Trial %3d at %5.2f uA is a hit\n',trialNo,currentAmplitude);
                 microstimHit=microstimHit+1;
                 numHitsElectrode=numHitsElectrode+1;%counter for a given electrode
@@ -470,7 +581,12 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
                 response=NaN;
             end
         elseif Hit == 1
-            if currentAmplitude>0%miss trial
+            electrodeNumInd=electrodeNumInd+1;
+            if electrodeNumInd>length(electrodeNums)
+                electrodeNumInd=1;
+                electrodeOrder=randperm(length(electrodeNums));
+            end
+            if catchTrial==0%miss trial
                 dasbit(Par.ErrorB, 1);
                 Par.Errcount = Par.Errcount + 1;
                 performance(trialNo)=-1;%error
@@ -520,6 +636,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
     allStimDur(trialNo)=stimDuration;
     allBlockNo(trialNo)=blockNo;
     allCurrentLevel(trialNo)=currentAmplitude;
+    allVisualTrial(trialNo)=visualOnly;
     allElectrodeNum{trialNo}=electrode;
     allInstanceNum{trialNo}=instance;
     allArrayNum{trialNo}=array;
@@ -581,16 +698,6 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
     if trialNo > 0
         save(fn,'*');
     end
-    if numHitsElectrode+numMissesElectrode>=trialsDesired%sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
-        allStaircaseResponse=[];
-        fprintf(['Electrode: ',num2str(electrode),' Hits: ',num2str(numHitsElectrode),' Misses: ',num2str(numMissesElectrode)]);
-        staircaseFinishedFlag=1;
-        electrodeNumInd=electrodeNumInd+1;
-        numHitsElectrode=0;
-        numMissesElectrode=0;
-        hitCounter=0;
-        missCounter=0;
-    end
 end
 
 if exist('my_devices','var')
@@ -602,3 +709,9 @@ if exist('my_devices','var')
 end
 Screen('Preference','SuppressAllWarnings',oldEnableFlag);
 Screen('Preference', 'Verbosity', oldLevel);
+
+%Code to check that number of trials per condition is correct:
+% allElectrodeNum(cellfun(@(allElectrodeNum) any(isnan(allElectrodeNum)),allElectrodeNum)) = []
+% allArrayNum(cellfun(@(allArrayNum) any(isnan(allArrayNum)),allArrayNum)) = []
+% allArrayNum=cell2mat(allArrayNum)
+% allElectrodeNum=cell2mat(allElectrodeNum)

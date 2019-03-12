@@ -15,7 +15,6 @@ stimulator(1) = cerestim96();
     my_devices = stimulator(1).scanForDevices
 %     my_devices = stimulator(2).scanForDevices
     
-    %% possible bug !!! 
     stimulatorInd=find(my_devices==desiredStimulator);
     stimulator(1).selectDevice(stimulatorInd-1) %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
 %     stimulator(2).selectDevice(stimulatorInd-1)
@@ -58,13 +57,12 @@ for i=1:5
             'frequency',300);
        
         
-        %% possible bug
         
         stimulator(1).beginSequence;
         stimulator(1).wait(10);%add an offset of 1 ms to train on second electrode
-        stimulator(1).beginGroup;
+%         stimulator(1).beginGroup;
         stimulator(1).autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
-        stimulator(1).endGroup;
+%         stimulator(1).endGroup;
         stimulator(1).endSequence;
         
         %  bug related to program a stimulator left in trigger

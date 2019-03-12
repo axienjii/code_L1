@@ -134,13 +134,14 @@ RFx=NaN;
 RFy=NaN;
 
 arrays=8:16;
-stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
+stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 65535 14138];%stimulator to which each array is connected
 
-load('C:\Users\Xing\Lick\currentThresholdChs.mat');
-chOrder=originalChOrder;
+load('C:\Users\Xing\Lick\currentThresholdChs139.mat');
+% chOrder=originalChOrder;
+chOrder=1;
 condInd=1;
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
-bipolar=0;
+bipolar=1;
 temporalOffset=0;
 
 %Create stimulator object
@@ -156,16 +157,16 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
     end
     %select array & electrode index (sorted by lowest to highest impedance) for microstimulation
-    array=goodArrays8to16(chOrder(condInd),7);%array number
-    electrodeInd=goodInds(chOrder(condInd));%channel number
-    arrayInd=find(arrays==array);
-    desiredStimulator=stimulatorNums(arrayInd);
-    desiredStimulator=14293;
+%     array=goodArrays8to16(chOrder(condInd),7);%array number
+%     electrodeInd=goodInds(chOrder(condInd));%channel number
+%     arrayInd=find(arrays==array);
+%     desiredStimulator=stimulatorNums(arrayInd);
+    desiredStimulator=65535;
     
     % define a waveform
     waveform_id = 1;
-    numPulses=50;%originally set to 5 pulses
-    numPulses=1;%originally set to 5 pulses
+    numPulses=50;%50 originally set to 5 pulses
+%     numPulses=1;%originally set to 5 pulses
     %         amplitude=50;%set current level in uA
     
     %/////////////////////////////////////////////////////////////////////
@@ -190,7 +191,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     electrode=1;
     electrode2=2;
     
-    my_devices = stimulator.scanForDevices;
+    my_devices = stimulator.scanForDevices
     pause(0.5)
     stimulatorInd=find(my_devices==desiredStimulator);
     stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
@@ -227,13 +228,13 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     end
     stimulator.autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
     if bipolar==1   
-        wait(200);
+%         wait(200);
         stimulator.autoStim(electrode2,waveform_id_Return) %Electrode #2 , Waveform #2
         stimulator.endGroup;
     end
     stimulator.endSequence;
     
-    for i=1:2000
+    for i=1
         Screen('FillRect',w,red);
         Screen('Flip', w);
 %         stimulator.manualStim(electrode,waveform_id)
@@ -244,7 +245,119 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         dasbit(6,1);
         pause(0.1);
         dasbit(6,0);
-        pause(1);
+%         pause(1);
+    end
+    
+    if exist('my_devices','var')
+        for deviceInd=1:length(my_devices)
+            stimulator(deviceInd).selectDevice(deviceInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+            %             temp=stimulator.isConnected;
+            %             if temp==1
+            %                 %Connect to the stimulator
+            stimulator(deviceInd).disconnect;
+            %             end
+            pause(0.05)
+        end
+    end
+    
+    
+    desiredStimulator=65535;
+    
+    % define a waveform
+    waveform_id = 1;
+    numPulses=50;%50 originally set to 5 pulses
+%     numPulses=1;%originally set to 5 pulses
+    %         amplitude=50;%set current level in uA
+    
+    %/////////////////////////////////////////////////////////////////////
+    %START THE TRIAL
+    %set control window positions and dimensions
+    refreshtracker(1) %for your control display
+    SetWindowDas      %for the dascard
+    Abort = false;    %whether subject has aborted before end of trial
+    
+    %///////// EVENT 0 START FIXATING//////////////////////////////////////
+    Screen('FillRect',w,grey);
+    Screen('FillOval',w,fixcol,[Par.HW-Fsz/2 Par.HH-Fsz/2 Par.HW+Fsz Par.HH+Fsz]);
+    Screen('Flip', w);
+    
+    % Bump priority for speed
+    priorityLevel=MaxPriority(w);
+    Priority(priorityLevel);
+    
+    currentAmplitudes=[20 40 60 80 100];
+    currentAmplitude=100;
+    currentAmplitude2=200;
+    electrode=1;
+    electrode2=2;
+    
+    my_devices = stimulator.scanForDevices
+    pause(0.5)
+    stimulatorInd=find(my_devices==desiredStimulator);
+    stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+    pause(0.5)
+    stimulator.connect;
+    pause(0.5)
+
+    stimulator.setStimPattern('waveform',waveform_id,...
+        'polarity',0,...
+        'pulses',numPulses,...
+        'amp1',currentAmplitude,...
+        'amp2',currentAmplitude,...
+        'width1',100,...
+        'width2',100,...
+        'interphase',60,...
+        'frequency',300);
+    %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
+    %deliver microstimulation
+    
+    waveform_id_Return=2;
+    stimulator.setStimPattern('waveform',waveform_id_Return,...
+        'polarity',1,...
+        'pulses',numPulses,...
+        'amp1',currentAmplitude2,...
+        'amp2',currentAmplitude2,...
+        'width1',100,...
+        'width2',100,...
+        'interphase',60,...
+        'frequency',300);
+
+    stimulator.beginSequence;
+    if bipolar==1
+        stimulator.beginGroup;
+    end
+    stimulator.autoStim(electrode,waveform_id) %Electrode #1 , Waveform #1
+    if bipolar==1   
+%         wait(200);
+        stimulator.autoStim(electrode2,waveform_id_Return) %Electrode #2 , Waveform #2
+        stimulator.endGroup;
+    end
+    stimulator.endSequence;
+    
+    for i=1
+        Screen('FillRect',w,red);
+        Screen('Flip', w);
+%         stimulator.manualStim(electrode,waveform_id)
+        stimulator.play(1)
+        Screen('FillRect',w,grey);
+        Screen('Flip', w);
+        pause(0.2)
+        dasbit(6,1);
+        pause(0.1);
+        dasbit(6,0);
+%         pause(1);
+    end
+    
+    if exist('my_devices','var')
+        for deviceInd=1:length(my_devices)
+            stimulator(deviceInd).selectDevice(deviceInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+            %             temp=stimulator.isConnected;
+            %             if temp==1
+            %                 %Connect to the stimulator
+            stimulator(deviceInd).disconnect;
+            %             end
+            pause(0.05)
+        end
     end
 end
 

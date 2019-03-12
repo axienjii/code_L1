@@ -145,14 +145,14 @@ RFy=NaN;
 arrays=8:16;
 stimulatorNums=[14295 14172 14173 14174 14175 14176 14294 14293 14138];%stimulator to which each array is connected
 
-load('C:\Users\Xing\Lick\currentThresholdChs76.mat');
+load('C:\Users\Xing\Lick\currentThresholds_previous\currentThresholdChs76.mat');
 chOrder=originalChOrder;
 condInd=1;
 staircaseFinishedFlag=0;%remains 0 until 40 reversals in staircase procedure have occured, at which point it is set to 1
 
 %Create stimulator object
 stimulator = cerestim96();
-while ~Par.ESC&&staircaseFinishedFlag==0
+% while ~Par.ESC&&staircaseFinishedFlag==0
     catchTrial=randi(2)-1%0 or 1. Randomly determined on each trial
     if catchTrial==1
         currentAmplitude=0;
@@ -163,16 +163,16 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         end
     end
     %select array & electrode index (sorted by lowest to highest impedance) for microstimulation
-    array=goodArrays8to16(chOrder(condInd),7);%array number
-    electrodeInd=goodInds(chOrder(condInd));%channel number
-    arrayInd=find(arrays==array);
-    desiredStimulator=stimulatorNums(arrayInd);
-    desiredStimulator=65494;
+%     array=goodArrays8to16(chOrder(condInd),7);%array number
+%     electrodeInd=goodInds(chOrder(condInd));%channel number
+%     arrayInd=find(arrays==array);
+%     desiredStimulator=stimulatorNums(arrayInd);
+    desiredStimulator=14295;
     
     % define a waveform
     waveform_id = 1;
     numPulses=50;%originally set to 5 pulses
-    numPulses=1;%originally set to 5 pulses
+%     numPulses=1;%originally set to 5 pulses
     %         amplitude=50;%set current level in uA
     
     %/////////////////////////////////////////////////////////////////////
@@ -191,57 +191,60 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     priorityLevel=MaxPriority(w);
     Priority(priorityLevel);
     
-    currentAmplitude=100;
     electrode=1;
-    
-    my_devices = stimulator.scanForDevices;
-    pause(0.5)
-    stimulatorInd=find(my_devices==desiredStimulator);
-    stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
-    pause(0.5)
-    stimulator.connect;
-    pause(0.5)
-
-    stimulator.setStimPattern('waveform',waveform_id,...
-        'polarity',0,...
-        'pulses',numPulses,...
-        'amp1',currentAmplitude,...
-        'amp2',currentAmplitude,...
-        'width1',170,...
-        'width2',170,...
-        'interphase',120,...
-        'frequency',300);
-    %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
-    %deliver microstimulation
-    
-%     waveform_id_Return=2;
-%     stimulator.setStimPattern('waveform',waveform_id_Return,...
-%         'polarity',1,...
-%         'pulses',numPulses,...
-%         'amp1',currentAmplitude,...
-%         'amp2',currentAmplitude,...
-%         'width1',170,...
-%         'width2',170,...
-%         'interphase',60,...
-%         'frequency',300);
-%     BGroupStimulus BGSInput;
-%     
-%     BGSInput.channel[0] = 1;
-%     BGSInput.channel[1] = 45;
-%     BGSInput.pattern[0] = 1;
-%     BGSInput.pattern[1] = 1;
-%     
-%     res = cerestim.groupStimulus(true, true, 1, 2, &BGSInput);
-    
-    for i=1:32
-        Screen('FillRect',w,red);
-        Screen('Flip', w);
-        stimulator.manualStim(electrode,waveform_id)
-%         stimulator.manualStim(i,waveform_id)
-        Screen('FillRect',w,grey);
-        Screen('Flip', w);
-        pause(0.2)
+    currentAmplitudes=linspace(1,60,5);
+    for cond=1:length(currentAmplitudes)%loop through various current amplitude levels
+        currentAmplitude=currentAmplitudes(cond);
+        
+        my_devices = stimulator.scanForDevices;
+        pause(0.5)
+        stimulatorInd=find(my_devices==desiredStimulator);
+        stimulator.selectDevice(stimulatorInd-1); %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
+        pause(0.5)
+        stimulator.connect;
+        pause(0.5)
+        
+        stimulator.setStimPattern('waveform',waveform_id,...
+            'polarity',0,...
+            'pulses',numPulses,...
+            'amp1',currentAmplitude,...
+            'amp2',currentAmplitude,...
+            'width1',170,...
+            'width2',170,...
+            'interphase',120,...
+            'frequency',300);
+        %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
+        %deliver microstimulation
+        
+        %     waveform_id_Return=2;
+        %     stimulator.setStimPattern('waveform',waveform_id_Return,...
+        %         'polarity',1,...
+        %         'pulses',numPulses,...
+        %         'amp1',currentAmplitude,...
+        %         'amp2',currentAmplitude,...
+        %         'width1',170,...
+        %         'width2',170,...
+        %         'interphase',60,...
+        %         'frequency',300);
+        %     BGroupStimulus BGSInput;
+        %
+        %     BGSInput.channel[0] = 1;
+        %     BGSInput.channel[1] = 45;
+        %     BGSInput.pattern[0] = 1;
+        %     BGSInput.pattern[1] = 1;
+        %
+        %     res = cerestim.groupStimulus(true, true, 1, 2, &BGSInput);
+        
+        for i=1:50
+            Screen('FillRect',w,red);
+            Screen('Flip', w);
+            stimulator.manualStim(electrode,waveform_id)
+            %         stimulator.manualStim(i,waveform_id)
+            Screen('FillRect',w,grey);
+            Screen('Flip', w);
+            pause(0.2)
+        end
     end
-end
+% end
 
 Screen('Preference','SuppressAllWarnings',oldEnableFlag);

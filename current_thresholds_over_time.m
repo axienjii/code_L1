@@ -30,8 +30,8 @@ end
 xlabel('session')
 ylabel('current threshold (uA)')
 title('current thresholds on individual channels across time')
-xlim([0 84])
-ylim([0 220])
+% xlim([0 84])
+% ylim([0 220])
 
 for chInd=1:size(allThresholds,1)
 %     figure;
@@ -67,6 +67,36 @@ figure;%box plot for size of standard deviation
 boxplot(stdChSorted);
 % title('size of standard deviation on individual channels, over 5/3/18 - 9/5/18')
 title('size of standard deviation on individual channels, over 5/3/18 - 24/7/18')
+
+%Draw box plots of current thresholds over time:
+figure;hold on
+xval=[];
+dates=[];
+for currentThresholdInd=87:134
+    fileName=['C:\Users\Xing\Lick\currentThresholds_previous\currentThresholdChs',num2str(currentThresholdInd),'.mat'];
+    fileInfo = dir(fileName);
+    dateCreated = fileInfo.date;
+    formatOut = 'yyyymmdd';
+    xval=[xval datenum(dateCreated)];
+    dates=[dates;cellstr(datestr(dateCreated,formatOut))];
+%     subplot(1,15,dateInd);
+end
+% xval(4)=xval(4)+1;
+% boxplot(allThresholds,'positions',xval,'boxstyle','filled','labels',dates);
+boxplot(allThresholds,'positions',xval,'boxstyle','filled','labels',dates,'whisker',1000);
+set(gca, 'FontSize', 8)
+set(gca,'XTickLabelRotation',60)
+xlabel('date')
+ylabel('50% current threshold (uA)');
+formatIn = 'ddmmyy';
+surgery=datenum('200417',formatIn);
+xlim([xval(1)-5 xval(end)+5]);
+% plot([surgery surgery],[0 1500],'r');
+ylim([0 215])
+set(gca, 'Ticklength', [0 0])
+lines = findobj(gcf, 'type', 'line', 'Tag', 'Median');
+set(lines, 'Color', 'r','LineWidth',5);
+title('current threshold values over time')
 
 %identify channels with large SD values:
 largeSDchs=find(stdCh>10);

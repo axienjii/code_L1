@@ -551,21 +551,43 @@ function update_current_thresholds
 % electrodes=thresholds(:,3);
 % arrays=thresholds(:,4);
 % newCurrentThresholds=ceil(thresholds(:,2));%uA
-load('X:\best\240718_data\240718_B6_thresholds.mat');
+% load('X:\best\240718_data\240718_B6_thresholds.mat');
+% load('X:\best\280918_data\280918_B5_thresholds.mat');
+% load('X:\best\041018_data\041018_B1_thresholds.mat');
+% load('X:\best\161018_data\161018_B1_thresholds.mat');
+% load('X:\best\161018_data\161018_B2_thresholds.mat');
+% load('X:\best\251018_data\251018_B1_thresholds.mat');
+% load('X:\best\251018_data\251018_B2_thresholds.mat');
+% load('X:\best\261018_data\261018_B1_thresholds.mat');
+load('X:\best\261018_data\261018_B3_thresholds.mat');
 electrodes=thresholds(:,3);
 arrays=thresholds(:,4);
 newCurrentThresholds=ceil(thresholds(:,2));%uA
 
-latestCurrentThresholdsFile=134;
+latestCurrentThresholdsFile=139;
 load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile),'.mat']);
-% goodCurrentThresholds=goodCurrentThresholdsNew;
-% goodArrays8to16=goodArrays8to16New;
-for i=1:length(newCurrentThresholds)
-    electrode=electrodes(i);
-    array=arrays(i);
-    electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
-    electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
-    electrodeInd=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
-    goodCurrentThresholds(electrodeInd)=newCurrentThresholds(i);
+if latestCurrentThresholdsFile<134
+    % goodCurrentThresholds=goodCurrentThresholdsNew;
+    % goodArrays8to16=goodArrays8to16New;
+    for i=1:length(newCurrentThresholds)
+        electrode=electrodes(i);
+        array=arrays(i);
+        electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
+        electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
+        electrodeInd=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
+        goodCurrentThresholds(electrodeInd)=newCurrentThresholds(i);
+    end
+    save(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile+1),'.mat'],'goodArrays8to16','goodCurrentThresholds')
+else
+    % goodCurrentThresholds=goodCurrentThresholdsNew;
+    % goodArrays8to16=goodArrays8to16New;
+    for i=1:length(newCurrentThresholds)
+        electrode=electrodes(i);
+        array=arrays(i);
+        electrodeIndtemp1=find(goodArrays8to16New(:,8)==electrode);%matching channel number
+        electrodeIndtemp2=find(goodArrays8to16New(:,7)==array);%matching array number
+        electrodeInd=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
+        goodCurrentThresholds(electrodeInd)=newCurrentThresholds(i);
+    end
+    save(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile),'.mat'],'goodArrays8to16New','goodCurrentThresholds')
 end
-save(['C:\Users\Xing\Lick\currentThresholdChs',num2str(latestCurrentThresholdsFile),'.mat'],'goodArrays8to16','goodCurrentThresholds')

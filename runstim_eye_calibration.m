@@ -1,6 +1,6 @@
 function runstim_eye_calibration(Hnd)
 %Written by Xing 31/1/18
-%Present fix spot at one of 9 possible locations, to calibrate eye movements in
+%Present fix spot at one of 9-25 possible locations, to calibrate eye movements in
 %degrees of visual angle per volt.
 
 global Par   %global parameters
@@ -155,8 +155,15 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     
     %define location of fixation spot
     condNo=ceil((catchHit+1)/trialsDesired);
-    xConds=[-300 0 300 -300 0 300 -300 0 300];
-    yConds=[-300 -300 -300 0 0 0 300 300 300];
+%     xConds=[-300 0 300 -300 0 300 -300 0 300];
+%     yConds=[-300 -300 -300 0 0 0 300 300 300];
+    xConds=[-300 -150 0 150 300 -300 -150 0 150 300 -300 -150 0 150 300 -300 -150 0 150 300 -300 -150 0 150 300];
+    yConds=[-300 -300 -300 -300 -300 -150 -150 -150 -150 -150 0 0 0 0 0 150 150 150 150 150 300 300 300 300 300];
+    condensedGrid=1;
+    if condensedGrid==1
+        xConds=[0 40 80 120 160 0 40 80 120 160 0 40 80 120 160 0 40 80 120 160 0 40 80 120 160];
+        yConds=[0 0 0 0 0 40 40 40 40 40 80 80 80 80 80 120 120 120 120 120 160 160 160 160 160];
+    end
     xCond=xConds(condNo);
     yCond=yConds(condNo);
     

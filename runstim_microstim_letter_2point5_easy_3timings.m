@@ -1,8 +1,7 @@
-function runstim_microstim_letter_2point5(Hnd)
-%Written by Xing 27/1/18
-%Present 4 targets for letter task. Letters are: I, O, A, and L (left,
-%right, top and bottom targets, respectively). Microstimulation delivered
-%through electrode sets, as specified in lookup_set_electrodes_letter.m.
+function runstim_microstim_letter_2point5_easy_3timings(Hnd)
+%Written by Xing 4/12/18
+%Easy visual version of letter task. Duration of stimulus presentation varies
+%from trial to trial (interleaved). 167, 367 or 567 ms.
 
 global Par   %global parameters
 global trialNo
@@ -169,8 +168,9 @@ allNewPhosphenes=[];
 
 % trialConds=repmat(1:4,[1,3]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 % trialConds=[trialConds;repmat(1:4,[1,3])];
-trialConds=repmat(1:2,[1,3]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
-trialConds=[trialConds;repmat(1:2,[1,3])];
+trialConds=repmat(1:2,[1,9]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
+trialConds=[trialConds;repmat(1:2,[1,9])];
+trialConds=[trialConds;1 1 1 1 1 1 2 2 2 2 2 2 3 3 3 3 3 3];
 % trialConds=repmat(1:4,[1,12]);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
 %index of set of electrodes to use, in second row: 1 to 4
 % arrays=8:16;
@@ -179,7 +179,7 @@ trialConds=[trialConds;repmat(1:2,[1,3])];
 arrays=8:16;
 % stimulatorNums=[14305 65372 65377 14173 65375 65376 65493 65494 65338];%stimulator to which each array is connected
 % stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
-stimulatorNums=[14295 65372 14173 65374 65375 65376 65493 65505 65338];%stimulator to which each array is connected
+stimulatorNums=[65505 65372 14173 65374 65375 65376 65493 14335 65338];%stimulator to which each array is connected
 multiCereStim=1;%set to 1 for stimulation involving more than 1 CereStim
 
 for i = [0 1 2 3 4 5 6 7]  %Error, Stim, Saccade, Trial, Correct,
@@ -201,8 +201,8 @@ for deviceInd=1:length(my_devices)
     stimulator(deviceInd).selectDevice(stimulatorInd-1) %the number inside the brackets is the stimulator instance number; numbering starts from 0 instead of from 1
     pause(0.5)
 end
-allLetters=['T';'O';'A';'L'];
-% allLetters=['I';'U';'D';'N'];
+% allLetters=['T';'O';'A';'L'];
+allLetters=['I';'U';'D';'N'];
 while ~Par.ESC&&staircaseFinishedFlag==0
     %Pretrial
     trialNo = trialNo+1;
@@ -215,6 +215,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         numTrialBlockCounter=0;  
         newOrder=randperm(size(trialConds,2));
         condOrder=trialConds(1,newOrder);
+        durOrder=trialConds(3,newOrder);
         if size(allLetters,2)==2
             condOrderSet=trialConds(2,newOrder);
         end
@@ -230,7 +231,6 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     
     %SET UP STIMULI FOR THIS TRIAL
     catchDotTime=1000;%time before catch dot is presented
-    stimDuration=randi([120 150]);
     visualTrialRand=randi(2);%50% of trials are visual trials %delete this line
     if newBlock==1
         blockNo=blockNo+1;
@@ -252,7 +252,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     numTargets=2;
 %     setInd=condOrderSet(1);
 %     setInd=61;%adjust
-    setInd=16;%[1:6 9 17:24 26 28:29]
+    setInd=30;%[1:6 9 17:24 26 28:29]
    
     if visualTrial==1
         currentAmplitude=0;
@@ -287,7 +287,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         condOrderSet=trialConds(2,newOrder);
 %         LRorTB=condOrderSet(1);%2 targets, 1: left and right; 2: top and bottom
 %         LRorTB=randi(2);
-%         LRorTB=2;
+        LRorTB=1;
         %     targetLocation=1;%adjust
         if LRorTB==1
             targetArrayX=[-200 200];
@@ -328,6 +328,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             condLetters=allLetters(3:4);
         end
     end
+    durations=[167 367 567];
+    durIndividualPhosphene=durations(durOrder(1));%randomize across trials
     desiredStimulator=[];
     stimSequenceInd=[];
     electrodeInd=[];
@@ -533,8 +535,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
         dasreset(1);     %set test parameters for exiting fix window        
         Time = 1;
         Hit = 0;
-        durIndividualPhosphene=167;
-        FIXT2=durIndividualPhosphene+600;%randi([500 600],1,1)%adjust
+        FIXT2=167+600;%randi([500 600],1,1)%adjust
         stimFlag2=1;
         stimOffFlag=1;
         individualPhosphenesFlags=zeros(numSimPhosphenes,1);
@@ -718,6 +719,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             end
             if length(condOrder)>1
                 condOrder=condOrder(2:end);
+                durOrder=durOrder(2:end);
                 if size(setElectrodes,2)==2
                     condOrderSet=condOrderSet(2:end);
                 end
@@ -761,6 +763,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
                     newOrder2=randperm(length(condOrder));
                 elseif drumming==0
                     condOrder=condOrder(2:end);
+                    durOrder=durOrder(2:end);
                 end
 %                 condOrder=condOrder(newOrder);
 %                 condOrderSet=condOrderSet(newOrder2);
@@ -789,7 +792,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
     allSampleX{trialNo}=RFx;
     allSampleY{trialNo}=RFy;
     allFixT(trialNo)=FIXT;
-    allStimDur(trialNo)=stimDuration;
+    allStimDur(trialNo)=durIndividualPhosphene;
     allBlockNo(trialNo)=blockNo;
     allCurrentLevel{trialNo}=currentAmplitude;
     allElectrodeNum{trialNo}=electrode;
@@ -873,7 +876,7 @@ while ~Par.ESC&&staircaseFinishedFlag==0
             end
         end
     end
-    if visualCorrect+visualIncorrect>100
+    if visualCorrect+visualIncorrect>300
         staircaseFinishedFlag=1;
     end
 end

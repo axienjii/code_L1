@@ -1,5 +1,6 @@
-function runstim_microstim_saccade_catch_batch_new_impedances(Hnd)
-%Written by Xing 05/12/17
+function runstim_microstim_saccade_catch_batch_200hz(Hnd)
+%Written by Xing 7/3/19
+%Delivers current at 200 Hz.
 %Determine microstimulation thresholds for electrodes on which monkey
 %reliably reports phosphene percept.
 %On 50% of trials, deliver microstimulation (10 pulses). Monkey has to fixate for 300 ms, followed by
@@ -8,9 +9,6 @@ function runstim_microstim_saccade_catch_batch_new_impedances(Hnd)
 %spot changes colour and reward given. On the other 50% of trials, no microstim
 %administered, and monkey is rewarded for maintaining fixation after 1000 ms.
 %Time allowed to reach target reduced to maximum of 200 ms.
-%This version of script uses newly identified list of channels with impedances of 150
-%kOhms or lower (as measured on 28/2/18), and combines it with previous
-%list of 201 channels, to obtain 371 channels in total.
 
 global Par   %global parameters
 global trialNo
@@ -110,8 +108,7 @@ else
 end
 
 arrays=8:16;
-% stimulatorNums=[14305 65372 65377 14173 65375 65376 65493 65494 65338];%stimulator to which each array is connected
-stimulatorNums=[14335 65372 14173 65374 65375 65376 65493 65505 65338];%stimulator to which each array is connected
+stimulatorNums=[65494 65372 14173 65374 65375 65376 65493 65377 65338];%stimulator to which each array is connected
 
 %Create stimulator object
 for deviceInd=1:length(stimulatorNums)
@@ -159,25 +156,13 @@ allHitRT=[];
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
 trialsDesired=15;
-currentThresholdChs=138;
-% electrodeNums=[setElectrodes{1} setElectrodes{2} setElectrodes{3} setElectrodes{4}];
-% arrayNums=[setArrays{1} setArrays{2} setArrays{3} setArrays{4}];
-% electrodeNums=[setElectrodes{1} setElectrodes{2}];
-% arrayNums=[setArrays{1} setArrays{2}];
-% electrodeNums=electrodeNums(10:end);
-% arrayNums=arrayNums(10:end);
-% electrodeNums=[52 9 27 11 22 36 44 19 56 1 46 40 28 41 34 51 64 18 32 34 6 20 14 12 30 35 52 22 43 31 31 12 13 6 36 1 37 40 62 63 47 34 4 53 46];%010518_B & B
-% arrayNums=[8 8 8 8 8 9 9 9 9 9 10 10 10 10 10 11 11 11 11 11 12 12 12 12 12 13 13 13 13 13 14 14 14 14 14 15 15 15 15 15 16 16 16 16 16];
-% electrodeNums=[52 9 27 11 22 36 44 19 56 1 46 40 28 41 34 51 64 18 32 34 6 20 14 12 30 35 52 22 43 31 31 12 13 6 36 1 37 40 62 63 47 34 4 53 46];%010518_B & B
-% arrayNums=[8 8 8 8 8 9 9 9 9 9 10 10 10 10 10 11 11 11 11 11 12 12 12 12 12 13 13 13 13 13 14 14 14 14 14 15 15 15 15 15 16 16 16 16 16];
-electrodeNums=[45 29 35 43 18];
-arrayNums=[10 10 10 10 11];
-% highSDChs=[12 13 14 17 19 26 29 30 34 35 39 40];
-% highSDChs=[17 19 26 29 30 34 35 39 40];
-% electrodeNums=electrodeNums(23:end);
-% arrayNums=arrayNums(23:end);
+currentThresholdChs=139;
+electrodeNums=[12 29 24 22 12];
+arrayNums=[12 14 12 12 14];
+tryDifferentCurrents=[10 15 150 150 20];
+% arrayNums=[10*ones(1,9) 11*ones(1,10) 12*ones(1,11) 13*ones(1,13) 14*ones(1,7) 15*ones(1,8) 16*ones(1,44)];
+% tryDifferentCurrents=40*ones(1,length(electrodeNums));
 % tryDifferentCurrents=[];
-tryDifferentCurrents=[100 50 25 40 30 45];
 uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
 electrodeNums=uniqueInd(:,1);
 arrayNums=uniqueInd(:,2);
@@ -244,19 +229,14 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         RFy=arrayRFs(electrodeInd,2);
         if staircaseFinishedFlag==1||firstTrial==1
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
-            highImpedanceChs=0;%set to 1 for current thresholding on electrodes that are not typically used for microstimulation due to high thresholds
-            if highImpedanceChs==0
-                electrodeIndtemp1=find(goodArrays8to16New(:,8)==electrode);%matching channel number
-                electrodeIndtemp2=find(goodArrays8to16New(:,7)==array);%matching array number
-                electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
-                existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
-                currentInd=find(finalCurrentVals<=1.5*existingThreshold);
-                if electrodeNumInd<=length(tryDifferentCurrents)&&~isempty(tryDifferentCurrents)
-                    tryDifferentCurrent=tryDifferentCurrents(electrodeNumInd);%use this line and the next, for manually adjusted estimate of current threshold
-                    currentInd=find(finalCurrentVals<=tryDifferentCurrent);
-                end
-            else
-                currentInd=find(finalCurrentVals<=30);
+            electrodeIndtemp1=find(goodArrays8to16New(:,8)==electrode);%matching channel number
+            electrodeIndtemp2=find(goodArrays8to16New(:,7)==array);%matching array number
+            electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
+            existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
+            currentInd=find(finalCurrentVals<=1.5*existingThreshold);
+            if electrodeNumInd<=length(tryDifferentCurrents)&&~isempty(tryDifferentCurrents)
+                tryDifferentCurrent=tryDifferentCurrents(electrodeNumInd);%use this line and the next, for manually adjusted estimate of current threshold
+                currentInd=find(finalCurrentVals<=tryDifferentCurrent);
             end
             currentInd=currentInd(end);
             firstTrial=0;
@@ -265,7 +245,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         currentAmplitude=finalCurrentVals(currentInd);
         % define a waveform
         waveform_id = 1;
-        numPulses=50;%originally set to 5 pulses
+        numPulses=30;%originally set to 5 pulses
         %         amplitude=50;%set current level in uA
         stimulator(stimulatorInd).setStimPattern('waveform',waveform_id,...
             'polarity',0,...
@@ -275,7 +255,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
             'width1',170,...
             'width2',170,...
             'interphase',60,...
-            'frequency',300);
+            'frequency',200);
         %'polarity' -	Polarity of the first phase, 0 (cathodic), 1 (anodic)
     end
     
@@ -581,7 +561,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
     if trialNo > 0
         save(fn,'*');
     end
-    if numHitsElectrode+numMissesElectrode>=trialsDesired%sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
+    if numHitsElectrode+numMissesElectrode>=trialsDesired||numMissesElectrode>=3%%sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
         allStaircaseResponse=[];
         fprintf(['Electrode: ',num2str(electrode),' Hits: ',num2str(numHitsElectrode),' Misses: ',num2str(numMissesElectrode)]);
         staircaseFinishedFlag=1;

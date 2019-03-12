@@ -156,7 +156,7 @@ allFalseAlarms=[];
 allHitX=[];
 allHitY=[];
 allHitRT=[];
-currentHigh=140;
+currentHigh=15;
 currentLow=1;
 numIntervals=6;%one less than number of current conditions
 currentInterval=round((currentHigh-currentLow)/numIntervals);
@@ -170,9 +170,11 @@ load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current
 staircaseFinishedFlag=0;
 trialsDesired=10;
 trialConds=repmat(1:length(currentValsDesired),1,trialsDesired);%trial conditions. Target conds in first row: for TB trials, 1: target is above; 2: target is below
-currentThresholdChs=131;
-electrodeNums=30;
-arrayNums=12;
+currentThresholdChs=137;
+electrodeNums=[ 40];
+arrayNums=[ 15];
+electrodeNums=40;
+arrayNums=15;
 % tryDifferentCurrents=[];
 tryDifferentCurrents=[];
 uniqueInd=unique([electrodeNums' arrayNums'],'rows','stable');
@@ -248,8 +250,8 @@ while ~Par.ESC&&staircaseFinishedFlag==0%&&electrodeNumInd<=length(electrodeNums
         RFy=arrayRFs(electrodeInd,2);
         if staircaseFinishedFlag==1||firstTrial==1
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
-            electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
-            electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
+            electrodeIndtemp1=find(goodArrays8to16New(:,8)==electrode);%matching channel number
+            electrodeIndtemp2=find(goodArrays8to16New(:,7)==array);%matching array number
             electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
             existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
             currentInd=find(finalCurrentVals<=existingThreshold);

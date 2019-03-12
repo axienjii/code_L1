@@ -107,7 +107,7 @@ else
 end
 
 arrays=8:16;
-stimulatorNums=[14295 65372 65377 65374 65375 65376 65493 65494 65338];%stimulator to which each array is connected
+stimulatorNums=[65494 65372 14173 65374 65375 65376 65493 65377 65338];%stimulator to which each array is connected
 
 %Create stimulator object
 for deviceInd=1:length(stimulatorNums)
@@ -154,12 +154,13 @@ allHitRT=[];
 
 load('C:\Users\Xing\Lick\finalCurrentVals8','finalCurrentVals');%list of current amplitudes to deliver, including catch trials where current amplitude is 0 (50% of all trials)
 staircaseFinishedFlag=0;
-trialsDesired=15;
-currentThresholdChs=85;
-electrodeNums=[53 59 60 61 63 5 21 36 4 50];
-arrayNums=[8 8 8 8 8 9 9 9 10 10];
-tryDifferentCurrents=[70 160 110 150 150 150 60 15 60 40];
-% electrodeNums=[4 64 5 25 1 9 60 17 41 25 8 6 16 61 32 48 64 60 62 8 64 31 7 63 16 15 9 17 56 32 19 27 20 18 57 14 28 46 24 10 54 30 36 60 7 48 49 24 64 6 4 1 41 8 29 28 5 37 7 61 58 40 38 44 63 39 30 15 57 35 43 46 47 50 64 22 28 56 16 23 13 19 24 32 53 59 48 11 4 6 2 60 31 62 55 36 9 3 5 10 25 34];
+trialsDesired=10;
+currentThresholdChs=139;
+% electrodeNums=[16 28 20 29 21 24 22 20 12 13];
+% arrayNums=[14 14 14 14 12 12 12 12 14 14];
+electrodeNums=[29 47 28 30 30 32];
+arrayNums=[12 13 12 13 14 14];
+tryDifferentCurrents=[100 100 140 100 20 20];
 % arrayNums=[10*ones(1,9) 11*ones(1,10) 12*ones(1,11) 13*ones(1,13) 14*ones(1,7) 15*ones(1,8) 16*ones(1,44)];
 % tryDifferentCurrents=40*ones(1,length(electrodeNums));
 % tryDifferentCurrents=[];
@@ -229,8 +230,8 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
         RFy=arrayRFs(electrodeInd,2);
         if staircaseFinishedFlag==1||firstTrial==1
             load(['C:\Users\Xing\Lick\currentThresholdChs',num2str(currentThresholdChs),'.mat']);%increased threshold for electrode 51, array 10 from 48 to 108, adjusted thresholds on all 4 electrodes
-            electrodeIndtemp1=find(goodArrays8to16(:,8)==electrode);%matching channel number
-            electrodeIndtemp2=find(goodArrays8to16(:,7)==array);%matching array number
+            electrodeIndtemp1=find(goodArrays8to16New(:,8)==electrode);%matching channel number
+            electrodeIndtemp2=find(goodArrays8to16New(:,7)==array);%matching array number
             electrodeIndCurrent=intersect(electrodeIndtemp1,electrodeIndtemp2);%channel number
             existingThreshold=goodCurrentThresholds(electrodeIndCurrent);
             currentInd=find(finalCurrentVals<=1.5*existingThreshold);
@@ -561,7 +562,7 @@ while ~Par.ESC&&electrodeNumInd<=length(electrodeNums)
     if trialNo > 0
         save(fn,'*');
     end
-    if numHitsElectrode+numMissesElectrode>=trialsDesired%sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
+    if numHitsElectrode+numMissesElectrode>=trialsDesired||numMissesElectrode>=3%%sum(logical(diff(allStaircaseResponse)))>=minNumReversals%||(numHitsElectrode/numMissesElectrode<0.1&&numHitsElectrode+numMissesElectrode>=50)||numHitsElectrode+numMissesElectrode>80%if there are min num of reversals, or the proportion of hits to misses is low after a sufficient number of trials, terminate staircase procedure
         allStaircaseResponse=[];
         fprintf(['Electrode: ',num2str(electrode),' Hits: ',num2str(numHitsElectrode),' Misses: ',num2str(numMissesElectrode)]);
         staircaseFinishedFlag=1;
